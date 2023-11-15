@@ -56,7 +56,6 @@ pub mod robot {
             },
         ];
         let mut indices: Vec<u32> = (0..=3).collect();
-
         // generate vertices and indices for circle
         let circle_segments = 100;
         for i in 3..=circle_segments {
@@ -118,5 +117,27 @@ pub mod robot {
         );
 
         glium::Program::from_source(disp, vertex_shader_src, &fragment_shader_src, None).unwrap()
+    }
+
+    pub fn rotate(
+        angle: f32,
+        chain: &mut Chain,
+        disp: &glium::Display<WindowSurface>,
+    ) -> glium::VertexBuffer<Vertex> {
+        let center_x = chain.middle.position[0];
+        let center_y = chain.middle.position[1] - DEF_HEIGHT;
+        let rotation_angle = angle.to_radians();
+        let rotation_matrix = [
+            [rotation_angle.cos(), -rotation_angle.sin()],
+            [rotation_angle.sin(), rotation_angle.cos()],
+        ];
+        for vertex in &mut chain.vertices {
+            let x = vertex.position[0] - center_x;
+            let y = vertex.position[1] - center_y;
+
+            vertex.position[0] = rotation_matrix[0][0] * x + rotation_matrix[0][1] * y + center_x;
+            vertex.position[1] = rotation_matrix[1][0] * x + rotation_matrix[1][1] * y + center_y;
+        }
+        glium::VertexBuffer::new(disp, &chain.vertices).unwrap()
     }
 }

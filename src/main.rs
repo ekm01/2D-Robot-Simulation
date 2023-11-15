@@ -3,7 +3,7 @@ extern crate glium;
 
 mod robot;
 
-use robot::robot::{generate_joint, rotate, Chain};
+use robot::robot::{generate_joint, rotate, Chain, DEF_HEIGHT};
 
 use glium::Surface;
 
@@ -15,10 +15,10 @@ fn main() {
         .with_inner_size(primary_monitor.size().width, primary_monitor.size().height)
         .build(&event_loop);
 
-    let mut circle1 = generate_joint(-0.5, -0.4, "1.0", "0.0", "0.0", &display);
-    let circle2 = generate_joint(
-        circle1.middle.position[0],
-        circle1.middle.position[1],
+    let mut chain1 = generate_joint(-0.5, -0.4, "1.0", "0.0", "0.0", &display);
+    let mut chain2 = generate_joint(
+        chain1.middle.position[0],
+        chain1.middle.position[1],
         "0.0",
         "1.0",
         "0.0",
@@ -26,7 +26,8 @@ fn main() {
     );
 
     // amount of turns available in both directions
-    let (mut _left_, mut _right_) = (0, 36);
+    let (mut _left_chain1, mut _right_chain1) = (0, 18);
+    let (mut _left_chain2, mut _right_chain2) = (0, 31);
 
     event_loop.run(move |ev, _, control_flow| {
         match ev {
@@ -36,19 +37,47 @@ fn main() {
                 }
                 winit::event::WindowEvent::KeyboardInput { input, .. } => {
                     if input.state == winit::event::ElementState::Pressed {
+                        let chain1_x = chain1.middle.position[0];
+                        let chain1_y = chain1.middle.position[1] - DEF_HEIGHT;
+
+                        let chain2_x = chain2.middle.position[0];
+                        let chain2_y = chain2.middle.position[1] - DEF_HEIGHT;
+
                         match input.virtual_keycode {
-                            Some(winit::event::VirtualKeyCode::Right) => {
-                                if _right_ > 0 {
-                                    circle1.vertex_buffer = rotate(-5.0, &mut circle1, &display);
-                                    _left_ += 1;
-                                    _right_ -= 1;
+                            Some(winit::event::VirtualKeyCode::W) => {
+                                if _right_chain1 > 0 {
+                                    chain1.vertex_buffer =
+                                        rotate(-5.0, &mut chain1, &display, chain1_x, chain1_y);
+                                    chain2.vertex_buffer =
+                                        rotate(-5.0, &mut chain2, &display, chain1_x, chain1_y);
+                                    _left_chain1 += 1;
+                                    _right_chain1 -= 1;
                                 }
                             }
-                            Some(winit::event::VirtualKeyCode::Left) => {
-                                if _left_ > 0 {
-                                    circle1.vertex_buffer = rotate(5.0, &mut circle1, &display);
-                                    _left_ -= 1;
-                                    _right_ += 1;
+                            Some(winit::event::VirtualKeyCode::Q) => {
+                                if _left_chain1 > 0 {
+                                    chain1.vertex_buffer =
+                                        rotate(5.0, &mut chain1, &display, chain1_x, chain1_y);
+                                    chain2.vertex_buffer =
+                                        rotate(5.0, &mut chain2, &display, chain1_x, chain1_y);
+                                    _left_chain1 -= 1;
+                                    _right_chain1 += 1;
+                                }
+                            }
+                            Some(winit::event::VirtualKeyCode::A) => {
+                                if _left_chain2 > 0 {
+                                    chain2.vertex_buffer =
+                                        rotate(5.0, &mut chain2, &display, chain2_x, chain2_y);
+                                    _left_chain2 -= 1;
+                                    _right_chain2 += 1;
+                                }
+                            }
+                            Some(winit::event::VirtualKeyCode::S) => {
+                                if _right_chain2 > 0 {
+                                    chain2.vertex_buffer =
+                                        rotate(-5.0, &mut chain2, &display, chain2_x, chain2_y);
+                                    _left_chain2 += 1;
+                                    _right_chain2 -= 1;
                                 }
                             }
                             _ => {}
@@ -64,17 +93,9 @@ fn main() {
         // set canvas color
         frame.clear_color(1.0, 1.0, 1.0, 1.0);
 
-        frame
-            .draw(
-                &circle1.vertex_buffer,
-                &circle1.index_buffer,
-                &circle1.program,
-                &glium::uniforms::EmptyUniforms,
-                &Default::default(),
-            )
-            .unwrap();
-
-        draw(&mut frame, &mut circle1);
+        // draw chains
+        draw(&mut frame, &mut chain1);
+        draw(&mut frame, &mut chain2);
         frame.finish().unwrap();
     });
 }

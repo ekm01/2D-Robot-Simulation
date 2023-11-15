@@ -10,7 +10,7 @@ pub mod robot {
 
     const DEF_RADIUS: f32 = 0.05;
     const DEF_THINNING: f32 = 0.02;
-    const DEF_HEIGHT: f32 = 0.4;
+    pub const DEF_HEIGHT: f32 = 0.4;
 
     pub struct Chain {
         // link and joint
@@ -123,9 +123,9 @@ pub mod robot {
         angle: f32,
         chain: &mut Chain,
         disp: &glium::Display<WindowSurface>,
+        center_x: f32,
+        center_y: f32,
     ) -> glium::VertexBuffer<Vertex> {
-        let center_x = chain.middle.position[0];
-        let center_y = chain.middle.position[1] - DEF_HEIGHT;
         let rotation_angle = angle.to_radians();
         let rotation_matrix = [
             [rotation_angle.cos(), -rotation_angle.sin()],

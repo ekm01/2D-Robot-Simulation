@@ -3,7 +3,7 @@ extern crate glium;
 
 mod robot;
 
-use robot::robot::{generate_joint, Chain};
+use robot::robot::generate_joint;
 
 use glium::Surface;
 
@@ -16,14 +16,6 @@ fn main() {
         .build(&event_loop);
 
     let mut circle1 = generate_joint(-0.3, -0.3, "1.0", "0.0", "0.0", &display);
-    let circle2 = generate_joint(
-        circle1.middle.position[0],
-        circle1.middle.position[1],
-        "0.0",
-        "1.0",
-        "0.0",
-        &display,
-    );
 
     event_loop.run(move |ev, _, control_flow| {
         match ev {
@@ -53,7 +45,7 @@ fn main() {
                             vertex.position[1] =
                                 rotation_matrix[1][0] * x + rotation_matrix[1][1] * y - 0.3;
                         }
-                        circle1.vertex_buffer =
+                        circle_vertex_buffer =
                             glium::VertexBuffer::new(&display, &circle1.vertices).unwrap();
                     }
                 }
@@ -68,27 +60,13 @@ fn main() {
 
         target
             .draw(
-                &circle1.vertex_buffer,
-                &circle1.index_buffer,
-                &circle1.program,
+                &circle_vertex_buffer,
+                &circle_index_buffer,
+                &program,
                 &glium::uniforms::EmptyUniforms,
                 &Default::default(),
             )
             .unwrap();
-
-        drawido(&mut target, &mut circle1);
         target.finish().unwrap();
     });
-}
-
-fn drawido(frame: &mut glium::Frame, chain: &mut Chain) {
-    frame
-        .draw(
-            &chain.vertex_buffer,
-            &chain.index_buffer,
-            &chain.program,
-            &glium::uniforms::EmptyUniforms,
-            &Default::default(),
-        )
-        .unwrap();
 }

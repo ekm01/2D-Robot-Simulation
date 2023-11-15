@@ -1,25 +1,21 @@
 #[macro_use]
 extern crate glium;
 
-use glium::Surface;
-use std::f32::consts;
+mod robot;
 
-#[derive(Copy, Clone)]
-struct Vertex {
-    position: [f32; 2],
-}
-implement_vertex!(Vertex, position);
+use robot::robot::{generate_program, generate_vertices};
+
+use glium::Surface;
 
 fn main() {
     let event_loop = winit::event_loop::EventLoopBuilder::new().build();
     let primary_monitor = event_loop.available_monitors().next().unwrap();
-
     let (_window, display) = glium::backend::glutin::SimpleWindowBuilder::new()
         .with_title("Forward Kinematics Simulation")
         .with_inner_size(primary_monitor.size().width, primary_monitor.size().height)
         .build(&event_loop);
 
-    let (mut circle_vertices, circle_indices) = generate_vertices();
+    let (mut circle_vertices, circle_indices, middle) = generate_vertices(-0.3, -0.3);
 
     let mut circle_vertex_buffer = glium::VertexBuffer::new(&display, &circle_vertices).unwrap();
 
@@ -30,30 +26,7 @@ fn main() {
     )
     .unwrap();
 
-    let vertex_shader_src = r#"
-        #version 330 core
-
-        in vec2 position;
-
-        void main() {
-            gl_Position = vec4(position, 0.0, 1.0);
-        }
-    "#;
-
-    let fragment_shader_src = r#"
-        #version 330 core
-
-        out vec4 color;
-
-        void main() {
-            color = vec4(1.0, 1.0, 1.0, 1.0);
-        }
-    "#;
-
-    let program =
-        glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None)
-            .unwrap();
-
+    let program = generate_program("1.0", "0.0", "0.0", &display);
     event_loop.run(move |ev, _, control_flow| {
         match ev {
             winit::event::Event::WindowEvent { event, .. } => match event {
@@ -87,7 +60,10 @@ fn main() {
             _ => (),
         }
         let mut target = display.draw();
+
+        // set canvas color
         target.clear_color(0.0, 0.0, 1.0, 1.0);
+
         target
             .draw(
                 &circle_vertex_buffer,
@@ -99,34 +75,4 @@ fn main() {
             .unwrap();
         target.finish().unwrap();
     });
-}
-
-fn generate_vertices() -> (Vec<Vertex>, Vec<u16>) {
-    let mut vertices = vec![
-        Vertex {
-            position: [-0.25, 0.2], // top right
-        },
-        Vertex {
-            position: [-0.35, -0.3], // bottom left
-        },
-        Vertex {
-            position: [-0.35, 0.2], // top left
-        },
-    ];
-    let mut indices: Vec<u16> = (0..=3).collect();
-
-    // Generate vertices and indices for the circle
-    let circle_segments = 100;
-    let circle_radius = 0.05;
-    for i in 3..=circle_segments {
-        let theta = 2.0 * consts::PI * (i as f32) / (circle_segments as f32);
-        let x = circle_radius * theta.cos();
-        let y = circle_radius * theta.sin();
-        vertices.push(Vertex {
-            position: [x - 0.3, y - 0.3],
-        });
-        indices.push(i as u16);
-    }
-
-    (vertices, indices)
 }

@@ -3,7 +3,7 @@ extern crate glium;
 
 mod robot;
 
-use robot::robot::{generate_joint, rotate, Chain, DEF_HEIGHT};
+use robot::robot::{generate_joint, rotate, Chain};
 
 use glium::Surface;
 
@@ -17,8 +17,8 @@ fn main() {
 
     let mut chain1 = generate_joint(-0.5, -0.4, "1.0", "0.0", "0.0", &display);
     let mut chain2 = generate_joint(
-        chain1.middle.position[0],
-        chain1.middle.position[1],
+        chain1.tip.position[0],
+        chain1.tip.position[1],
         "0.0",
         "1.0",
         "0.0",
@@ -37,11 +37,11 @@ fn main() {
                 }
                 winit::event::WindowEvent::KeyboardInput { input, .. } => {
                     if input.state == winit::event::ElementState::Pressed {
-                        let chain1_x = chain1.middle.position[0];
-                        let chain1_y = chain1.middle.position[1] - DEF_HEIGHT;
+                        let chain1_x = chain1.center.position[0];
+                        let chain1_y = chain1.center.position[1];
 
-                        let chain2_x = chain2.middle.position[0];
-                        let chain2_y = chain2.middle.position[1] - DEF_HEIGHT;
+                        let chain2_x = chain1.tip.position[0];
+                        let chain2_y = chain1.tip.position[1];
 
                         match input.virtual_keycode {
                             Some(winit::event::VirtualKeyCode::W) => {

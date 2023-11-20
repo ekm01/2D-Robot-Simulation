@@ -16,7 +16,8 @@ pub mod robot {
         // link and joint
         pub vertices: Vec<Vertex>,
         pub indices: Vec<u32>,
-        pub middle: Vertex,
+        pub center: Vertex,
+        pub tip: Vertex,
         pub vertex_buffer: glium::VertexBuffer<Vertex>,
         pub index_buffer: glium::IndexBuffer<u32>,
         pub program: glium::program::Program,
@@ -30,13 +31,18 @@ pub mod robot {
         b: &str,
         disp: &glium::Display<WindowSurface>,
     ) -> Chain {
-        let (vertices, indices, middle) = generate_vertices(center_x, center_y);
+        let (vertices, indices, center) = generate_vertices(center_x, center_y);
+        let tip = Vertex {
+            position: [center.position[0], center.position[1] + DEF_HEIGHT],
+        };
+
         let (vertex_buffer, index_buffer) = generate_vertex_index_buffer(disp, &vertices, &indices);
         let program = generate_program(r, g, b, disp);
         Chain {
             vertices,
             indices,
-            middle,
+            center,
+            tip,
             vertex_buffer,
             index_buffer,
             program,
@@ -56,6 +62,7 @@ pub mod robot {
             },
         ];
         let mut indices: Vec<u32> = (0..=3).collect();
+
         // generate vertices and indices for circle
         let circle_segments = 100;
         for i in 3..=circle_segments {
@@ -69,7 +76,7 @@ pub mod robot {
         }
 
         let middle = Vertex {
-            position: [center_x, center_y + DEF_HEIGHT],
+            position: [center_x, center_y],
         };
 
         (vertices, indices, middle)
@@ -138,6 +145,13 @@ pub mod robot {
             vertex.position[0] = rotation_matrix[0][0] * x + rotation_matrix[0][1] * y + center_x;
             vertex.position[1] = rotation_matrix[1][0] * x + rotation_matrix[1][1] * y + center_y;
         }
+
+        let x = chain.tip.position[0] - center_x;
+        let y = chain.tip.position[1] - center_y;
+
+        chain.tip.position[0] = rotation_matrix[0][0] * x + rotation_matrix[0][1] * y + center_x;
+        chain.tip.position[1] = rotation_matrix[1][0] * x + rotation_matrix[1][1] * y + center_y;
+
         glium::VertexBuffer::new(disp, &chain.vertices).unwrap()
     }
 }

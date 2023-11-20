@@ -24,6 +24,21 @@ fn main() {
         "0.0",
         &display,
     );
+    let mut chain3 = generate_joint(
+        chain2.tip.position[0],
+        chain2.tip.position[1],
+        "0.0",
+        "0.0",
+        "1.0",
+        &display,
+    );
+    chain3.vertex_buffer = rotate(
+        -90.0,
+        &mut chain3,
+        &display,
+        chain2.tip.position[0],
+        chain2.tip.position[1],
+    );
 
     // amount of turns available in both directions
     let (mut _left_chain1, mut _right_chain1) = (0, 18);
@@ -96,6 +111,7 @@ fn main() {
         // draw chains
         draw(&mut frame, &mut chain1);
         draw(&mut frame, &mut chain2);
+        draw(&mut frame, &mut chain3);
         frame.finish().unwrap();
     });
 }

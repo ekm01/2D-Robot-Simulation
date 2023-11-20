@@ -146,6 +146,7 @@ pub mod robot {
             vertex.position[1] = rotation_matrix[1][0] * x + rotation_matrix[1][1] * y + center_y;
         }
 
+        // modify tip of the chain
         let x = chain.tip.position[0] - center_x;
         let y = chain.tip.position[1] - center_y;
 

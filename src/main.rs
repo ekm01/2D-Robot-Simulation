@@ -3,7 +3,7 @@ extern crate glium;
 
 mod robot;
 
-use robot::robot::{generate_joint, rotate, Chain, DEF_HEIGHT};
+use robot::robot::{generate_claw, generate_joint, rotate, Part, Vertex, DEF_HEIGHT, DEF_THINNING};
 
 use glium::Surface;
 
@@ -39,6 +39,53 @@ fn main() {
         chain2.tip.position[0],
         chain2.tip.position[1],
     );
+
+    let claw1_vertices = vec![
+        Vertex {
+            position: [
+                chain3.tip.position[0],
+                chain3.tip.position[1] + DEF_THINNING,
+            ],
+        },
+        Vertex {
+            position: [
+                chain3.tip.position[0] + 0.01,
+                chain3.tip.position[1] + DEF_THINNING + 0.03,
+            ],
+        },
+        Vertex {
+            position: [
+                chain3.tip.position[0] + 0.06,
+                chain3.tip.position[1] + DEF_THINNING + 0.02,
+            ],
+        },
+    ];
+
+    let mut claw1 = generate_claw(claw1_vertices, "1.0", "0.0", "0.0", &display);
+
+    let claw2_vertices = vec![
+        Vertex {
+            position: [
+                chain3.tip.position[0],
+                chain3.tip.position[1] - DEF_THINNING,
+            ],
+        },
+        Vertex {
+            position: [
+                chain3.tip.position[0] + 0.01,
+                chain3.tip.position[1] - DEF_THINNING - 0.03,
+            ],
+        },
+        Vertex {
+            position: [
+                chain3.tip.position[0] + 0.06,
+                chain3.tip.position[1] - DEF_THINNING - 0.02,
+            ],
+        },
+    ];
+
+    let mut claw2 = generate_claw(claw2_vertices, "1.0", "0.0", "0.0", &display);
+
     let (origin_x, origin_y) = (chain1.tip.position[0], chain1.tip.position[1] - DEF_HEIGHT);
 
     // amount of rotations left in both directions
@@ -144,17 +191,19 @@ fn main() {
         draw(&mut frame, &mut chain1);
         draw(&mut frame, &mut chain2);
         draw(&mut frame, &mut chain3);
+        draw(&mut frame, &mut claw1);
+        draw(&mut frame, &mut claw2);
 
         frame.finish().unwrap();
     });
 }
 
-fn draw(frame: &mut glium::Frame, chain: &mut Chain) {
+fn draw(frame: &mut glium::Frame, chain: &mut dyn Part) {
     frame
         .draw(
-            &chain.vertex_buffer,
-            &chain.index_buffer,
-            &chain.program,
+            chain.get_vertex_buf(),
+            chain.get_index_buf(),
+            chain.get_program(),
             &glium::uniforms::EmptyUniforms,
             &Default::default(),
         )

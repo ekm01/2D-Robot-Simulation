@@ -9,8 +9,14 @@ pub mod robot {
     implement_vertex!(Vertex, position);
 
     const DEF_RADIUS: f32 = 0.05;
-    const DEF_THINNING: f32 = 0.02;
+    pub const DEF_THINNING: f32 = 0.02;
     pub const DEF_HEIGHT: f32 = 0.4;
+
+    pub trait Part {
+        fn get_vertex_buf(&self) -> &glium::VertexBuffer<Vertex>;
+        fn get_index_buf(&self) -> &glium::IndexBuffer<u32>;
+        fn get_program(&self) -> &glium::program::Program;
+    }
 
     pub struct Chain {
         // link and joint
@@ -20,6 +26,56 @@ pub mod robot {
         pub vertex_buffer: glium::VertexBuffer<Vertex>,
         pub index_buffer: glium::IndexBuffer<u32>,
         pub program: glium::program::Program,
+    }
+
+    impl Part for Chain {
+        fn get_vertex_buf(&self) -> &glium::VertexBuffer<Vertex> {
+            &self.vertex_buffer
+        }
+        fn get_index_buf(&self) -> &glium::IndexBuffer<u32> {
+            &self.index_buffer
+        }
+        fn get_program(&self) -> &glium::program::Program {
+            &self.program
+        }
+    }
+
+    pub struct Claw {
+        pub vertices: Vec<Vertex>,
+        pub vertex_buffer: glium::VertexBuffer<Vertex>,
+        pub index_buffer: glium::IndexBuffer<u32>,
+        pub program: glium::program::Program,
+    }
+
+    impl Part for Claw {
+        fn get_vertex_buf(&self) -> &glium::VertexBuffer<Vertex> {
+            &self.vertex_buffer
+        }
+        fn get_index_buf(&self) -> &glium::IndexBuffer<u32> {
+            &self.index_buffer
+        }
+        fn get_program(&self) -> &glium::program::Program {
+            &self.program
+        }
+    }
+
+    pub fn generate_claw(
+        vertices: Vec<Vertex>,
+        r: &str,
+        g: &str,
+        b: &str,
+        disp: &glium::Display<WindowSurface>,
+    ) -> Claw {
+        let indices = (0..=2).collect();
+        let (vertex_buffer, index_buffer) = generate_vertex_index_buffer(disp, &vertices, &indices);
+        let program = generate_program(r, g, b, disp);
+
+        Claw {
+            vertices,
+            vertex_buffer,
+            index_buffer,
+            program,
+        }
     }
 
     pub fn generate_joint(

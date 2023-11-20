@@ -16,7 +16,6 @@ pub mod robot {
         // link and joint
         pub vertices: Vec<Vertex>,
         pub indices: Vec<u32>,
-        pub center: Vertex,
         pub tip: Vertex,
         pub vertex_buffer: glium::VertexBuffer<Vertex>,
         pub index_buffer: glium::IndexBuffer<u32>,
@@ -31,17 +30,13 @@ pub mod robot {
         b: &str,
         disp: &glium::Display<WindowSurface>,
     ) -> Chain {
-        let (vertices, indices, center) = generate_vertices(center_x, center_y);
-        let tip = Vertex {
-            position: [center.position[0], center.position[1] + DEF_HEIGHT],
-        };
+        let (vertices, indices, tip) = generate_vertices(center_x, center_y);
 
         let (vertex_buffer, index_buffer) = generate_vertex_index_buffer(disp, &vertices, &indices);
         let program = generate_program(r, g, b, disp);
         Chain {
             vertices,
             indices,
-            center,
             tip,
             vertex_buffer,
             index_buffer,
@@ -75,11 +70,11 @@ pub mod robot {
             indices.push(i as u32);
         }
 
-        let middle = Vertex {
-            position: [center_x, center_y],
+        let tip = Vertex {
+            position: [center_x, center_y + DEF_HEIGHT],
         };
 
-        (vertices, indices, middle)
+        (vertices, indices, tip)
     }
 
     fn generate_vertex_index_buffer(

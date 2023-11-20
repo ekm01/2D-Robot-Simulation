@@ -3,7 +3,7 @@ extern crate glium;
 
 mod robot;
 
-use robot::robot::{generate_joint, rotate, Chain};
+use robot::robot::{generate_joint, rotate, Chain, DEF_HEIGHT};
 
 use glium::Surface;
 
@@ -39,6 +39,7 @@ fn main() {
         chain2.tip.position[0],
         chain2.tip.position[1],
     );
+    let (origin_x, origin_y) = (chain1.tip.position[0], chain1.tip.position[1] - DEF_HEIGHT);
 
     // amount of rotations left in both directions
     let (mut _left_chain1, mut _right_chain1) = (0, 18);
@@ -53,9 +54,6 @@ fn main() {
                 }
                 winit::event::WindowEvent::KeyboardInput { input, .. } => {
                     if input.state == winit::event::ElementState::Pressed {
-                        let chain1_x = chain1.center.position[0];
-                        let chain1_y = chain1.center.position[1];
-
                         let chain2_x = chain1.tip.position[0];
                         let chain2_y = chain1.tip.position[1];
 
@@ -66,23 +64,26 @@ fn main() {
                             Some(winit::event::VirtualKeyCode::Q) => {
                                 if _left_chain1 > 0 {
                                     chain1.vertex_buffer =
-                                        rotate(5.0, &mut chain1, &display, chain1_x, chain1_y);
+                                        rotate(5.0, &mut chain1, &display, origin_x, origin_y);
                                     chain2.vertex_buffer =
-                                        rotate(5.0, &mut chain2, &display, chain1_x, chain1_y);
+                                        rotate(5.0, &mut chain2, &display, origin_x, origin_y);
                                     chain3.vertex_buffer =
-                                        rotate(5.0, &mut chain3, &display, chain1_x, chain1_y);
+                                        rotate(5.0, &mut chain3, &display, origin_x, origin_y);
                                     _left_chain1 -= 1;
                                     _right_chain1 += 1;
                                 }
                             }
                             Some(winit::event::VirtualKeyCode::W) => {
-                                if _right_chain1 > 0 {
+                                if _right_chain1 > 0
+                                    && chain2.tip.position[1] >= origin_y
+                                    && chain3.tip.position[1] >= origin_y
+                                {
                                     chain1.vertex_buffer =
-                                        rotate(-5.0, &mut chain1, &display, chain1_x, chain1_y);
+                                        rotate(-5.0, &mut chain1, &display, origin_x, origin_y);
                                     chain2.vertex_buffer =
-                                        rotate(-5.0, &mut chain2, &display, chain1_x, chain1_y);
+                                        rotate(-5.0, &mut chain2, &display, origin_x, origin_y);
                                     chain3.vertex_buffer =
-                                        rotate(-5.0, &mut chain3, &display, chain1_x, chain1_y);
+                                        rotate(-5.0, &mut chain3, &display, origin_x, origin_y);
                                     _left_chain1 += 1;
                                     _right_chain1 -= 1;
                                 }
@@ -98,7 +99,10 @@ fn main() {
                                 }
                             }
                             Some(winit::event::VirtualKeyCode::S) => {
-                                if _right_chain2 > 0 {
+                                if _right_chain2 > 0
+                                    && chain2.tip.position[1] >= origin_y
+                                    && chain3.tip.position[1] >= origin_y
+                                {
                                     chain2.vertex_buffer =
                                         rotate(-5.0, &mut chain2, &display, chain2_x, chain2_y);
                                     chain3.vertex_buffer =
@@ -116,7 +120,7 @@ fn main() {
                                 }
                             }
                             Some(winit::event::VirtualKeyCode::X) => {
-                                if _right_chain3 > 0 {
+                                if _right_chain3 > 0 && chain3.tip.position[1] >= origin_y {
                                     chain3.vertex_buffer =
                                         rotate(-5.0, &mut chain3, &display, chain3_x, chain3_y);
                                     _left_chain3 += 1;

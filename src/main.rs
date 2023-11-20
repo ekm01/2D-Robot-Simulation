@@ -40,7 +40,7 @@ fn main() {
         chain2.tip.position[1],
     );
 
-    // amount of turns available in both directions
+    // amount of rotations left in both directions
     let (mut _left_chain1, mut _right_chain1) = (0, 18);
     let (mut _left_chain2, mut _right_chain2) = (0, 31);
     let (mut _left_chain3, mut _right_chain3) = (18, 13);
@@ -140,6 +140,7 @@ fn main() {
         draw(&mut frame, &mut chain1);
         draw(&mut frame, &mut chain2);
         draw(&mut frame, &mut chain3);
+
         frame.finish().unwrap();
     });
 }

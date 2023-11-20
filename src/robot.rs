@@ -179,7 +179,7 @@ pub mod robot {
 
     pub fn rotate(
         angle: f32,
-        chain: &mut Chain,
+        part: &mut Chain,
         disp: &glium::Display<WindowSurface>,
         center_x: f32,
         center_y: f32,
@@ -189,7 +189,7 @@ pub mod robot {
             [rotation_angle.cos(), -rotation_angle.sin()],
             [rotation_angle.sin(), rotation_angle.cos()],
         ];
-        for vertex in &mut chain.vertices {
+        for vertex in &mut part.vertices {
             let x = vertex.position[0] - center_x;
             let y = vertex.position[1] - center_y;
 
@@ -198,12 +198,12 @@ pub mod robot {
         }
 
         // modify tip of the chain
-        let x = chain.tip.position[0] - center_x;
-        let y = chain.tip.position[1] - center_y;
+        let x = part.tip.position[0] - center_x;
+        let y = part.tip.position[1] - center_y;
 
-        chain.tip.position[0] = rotation_matrix[0][0] * x + rotation_matrix[0][1] * y + center_x;
-        chain.tip.position[1] = rotation_matrix[1][0] * x + rotation_matrix[1][1] * y + center_y;
+        part.tip.position[0] = rotation_matrix[0][0] * x + rotation_matrix[0][1] * y + center_x;
+        part.tip.position[1] = rotation_matrix[1][0] * x + rotation_matrix[1][1] * y + center_y;
 
-        glium::VertexBuffer::new(disp, &chain.vertices).unwrap()
+        glium::VertexBuffer::new(disp, &part.vertices).unwrap()
     }
 }

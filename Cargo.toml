@@ -1,5 +1,5 @@
 [package]
-name = "forward_kinematics"
+name = "robot_simulation"
 version = "0.1.0"
 edition = "2021"
 

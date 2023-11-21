@@ -44,19 +44,19 @@ fn main() {
         Vertex {
             position: [
                 chain3.tip.position[0],
-                chain3.tip.position[1] + DEF_THINNING,
+                chain3.tip.position[1] + DEF_THINNING + 0.01,
             ],
         },
         Vertex {
             position: [
                 chain3.tip.position[0] + 0.01,
-                chain3.tip.position[1] + DEF_THINNING + 0.03,
+                chain3.tip.position[1] + DEF_THINNING + 0.04,
             ],
         },
         Vertex {
             position: [
                 chain3.tip.position[0] + 0.06,
-                chain3.tip.position[1] + DEF_THINNING + 0.02,
+                chain3.tip.position[1] + DEF_THINNING + 0.03,
             ],
         },
     ];
@@ -67,19 +67,19 @@ fn main() {
         Vertex {
             position: [
                 chain3.tip.position[0],
-                chain3.tip.position[1] - DEF_THINNING,
+                chain3.tip.position[1] - DEF_THINNING - 0.01,
             ],
         },
         Vertex {
             position: [
                 chain3.tip.position[0] + 0.01,
-                chain3.tip.position[1] - DEF_THINNING - 0.03,
+                chain3.tip.position[1] - DEF_THINNING - 0.04,
             ],
         },
         Vertex {
             position: [
                 chain3.tip.position[0] + 0.06,
-                chain3.tip.position[1] - DEF_THINNING - 0.02,
+                chain3.tip.position[1] - DEF_THINNING - 0.03,
             ],
         },
     ];
@@ -92,6 +92,7 @@ fn main() {
     let (mut _left_chain1, mut _right_chain1) = (0, 18);
     let (mut _left_chain2, mut _right_chain2) = (0, 31);
     let (mut _left_chain3, mut _right_chain3) = (18, 13);
+    let (mut _left_claw, mut _right_claw) = (0, 9);
 
     event_loop.run(move |ev, _, control_flow| {
         match ev {
@@ -107,6 +108,12 @@ fn main() {
                         let chain3_x = chain2.tip.position[0];
                         let chain3_y = chain2.tip.position[1];
 
+                        let claw1_x = claw1.tip.position[0];
+                        let claw1_y = claw1.tip.position[1];
+
+                        let claw2_x = claw2.tip.position[0];
+                        let claw2_y = claw2.tip.position[1];
+
                         match input.virtual_keycode {
                             Some(winit::event::VirtualKeyCode::Q) => {
                                 if _left_chain1 > 0 {
@@ -116,6 +123,10 @@ fn main() {
                                         rotate(5.0, &mut chain2, &display, origin_x, origin_y);
                                     chain3.vertex_buffer =
                                         rotate(5.0, &mut chain3, &display, origin_x, origin_y);
+                                    claw1.vertex_buffer =
+                                        rotate(5.0, &mut claw1, &display, origin_x, origin_y);
+                                    claw2.vertex_buffer =
+                                        rotate(5.0, &mut claw2, &display, origin_x, origin_y);
                                     _left_chain1 -= 1;
                                     _right_chain1 += 1;
                                 }
@@ -131,6 +142,10 @@ fn main() {
                                         rotate(-5.0, &mut chain2, &display, origin_x, origin_y);
                                     chain3.vertex_buffer =
                                         rotate(-5.0, &mut chain3, &display, origin_x, origin_y);
+                                    claw1.vertex_buffer =
+                                        rotate(-5.0, &mut claw1, &display, origin_x, origin_y);
+                                    claw2.vertex_buffer =
+                                        rotate(-5.0, &mut claw2, &display, origin_x, origin_y);
                                     _left_chain1 += 1;
                                     _right_chain1 -= 1;
                                 }
@@ -141,6 +156,10 @@ fn main() {
                                         rotate(5.0, &mut chain2, &display, chain2_x, chain2_y);
                                     chain3.vertex_buffer =
                                         rotate(5.0, &mut chain3, &display, chain2_x, chain2_y);
+                                    claw1.vertex_buffer =
+                                        rotate(5.0, &mut claw1, &display, chain2_x, chain2_y);
+                                    claw2.vertex_buffer =
+                                        rotate(5.0, &mut claw2, &display, chain2_x, chain2_y);
                                     _left_chain2 -= 1;
                                     _right_chain2 += 1;
                                 }
@@ -154,6 +173,10 @@ fn main() {
                                         rotate(-5.0, &mut chain2, &display, chain2_x, chain2_y);
                                     chain3.vertex_buffer =
                                         rotate(-5.0, &mut chain3, &display, chain2_x, chain2_y);
+                                    claw1.vertex_buffer =
+                                        rotate(-5.0, &mut claw1, &display, chain2_x, chain2_y);
+                                    claw2.vertex_buffer =
+                                        rotate(-5.0, &mut claw2, &display, chain2_x, chain2_y);
                                     _left_chain2 += 1;
                                     _right_chain2 -= 1;
                                 }
@@ -162,6 +185,10 @@ fn main() {
                                 if _left_chain3 > 0 {
                                     chain3.vertex_buffer =
                                         rotate(5.0, &mut chain3, &display, chain3_x, chain3_y);
+                                    claw1.vertex_buffer =
+                                        rotate(5.0, &mut claw1, &display, chain3_x, chain3_y);
+                                    claw2.vertex_buffer =
+                                        rotate(5.0, &mut claw2, &display, chain3_x, chain3_y);
                                     _left_chain3 -= 1;
                                     _right_chain3 += 1;
                                 }
@@ -170,8 +197,32 @@ fn main() {
                                 if _right_chain3 > 0 && chain3.tip.position[1] >= origin_y {
                                     chain3.vertex_buffer =
                                         rotate(-5.0, &mut chain3, &display, chain3_x, chain3_y);
+                                    claw1.vertex_buffer =
+                                        rotate(-5.0, &mut claw1, &display, chain3_x, chain3_y);
+                                    claw2.vertex_buffer =
+                                        rotate(-5.0, &mut claw2, &display, chain3_x, chain3_y);
                                     _left_chain3 += 1;
                                     _right_chain3 -= 1;
+                                }
+                            }
+                            Some(winit::event::VirtualKeyCode::Key1) => {
+                                if _left_claw > 0 {
+                                    claw1.vertex_buffer =
+                                        rotate(5.0, &mut claw1, &display, claw1_x, claw1_y);
+                                    claw2.vertex_buffer =
+                                        rotate(-5.0, &mut claw2, &display, claw2_x, claw2_y);
+                                    _left_claw -= 1;
+                                    _right_claw += 1;
+                                }
+                            }
+                            Some(winit::event::VirtualKeyCode::Key2) => {
+                                if _right_claw > 0 {
+                                    claw1.vertex_buffer =
+                                        rotate(-5.0, &mut claw1, &display, claw1_x, claw1_y);
+                                    claw2.vertex_buffer =
+                                        rotate(5.0, &mut claw2, &display, claw2_x, claw2_y);
+                                    _left_claw += 1;
+                                    _right_claw -= 1;
                                 }
                             }
                             _ => {}

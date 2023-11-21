@@ -16,6 +16,8 @@ pub mod robot {
         fn get_vertex_buf(&self) -> &glium::VertexBuffer<Vertex>;
         fn get_index_buf(&self) -> &glium::IndexBuffer<u32>;
         fn get_program(&self) -> &glium::program::Program;
+        fn get_vertices(&mut self) -> &mut Vec<Vertex>;
+        fn get_tip(&mut self) -> &mut Vertex;
     }
 
     pub struct Chain {
@@ -38,10 +40,17 @@ pub mod robot {
         fn get_program(&self) -> &glium::program::Program {
             &self.program
         }
+        fn get_vertices(&mut self) -> &mut Vec<Vertex> {
+            &mut self.vertices
+        }
+        fn get_tip(&mut self) -> &mut Vertex {
+            &mut self.tip
+        }
     }
 
     pub struct Claw {
         pub vertices: Vec<Vertex>,
+        pub tip: Vertex,
         pub vertex_buffer: glium::VertexBuffer<Vertex>,
         pub index_buffer: glium::IndexBuffer<u32>,
         pub program: glium::program::Program,
@@ -57,6 +66,12 @@ pub mod robot {
         fn get_program(&self) -> &glium::program::Program {
             &self.program
         }
+        fn get_vertices(&mut self) -> &mut Vec<Vertex> {
+            &mut self.vertices
+        }
+        fn get_tip(&mut self) -> &mut Vertex {
+            &mut self.tip
+        }
     }
 
     pub fn generate_claw(
@@ -69,9 +84,10 @@ pub mod robot {
         let indices = (0..=2).collect();
         let (vertex_buffer, index_buffer) = generate_vertex_index_buffer(disp, &vertices, &indices);
         let program = generate_program(r, g, b, disp);
-
+        let tip = vertices[0];
         Claw {
             vertices,
+            tip,
             vertex_buffer,
             index_buffer,
             program,
@@ -179,7 +195,7 @@ pub mod robot {
 
     pub fn rotate(
         angle: f32,
-        part: &mut Chain,
+        part: &mut dyn Part,
         disp: &glium::Display<WindowSurface>,
         center_x: f32,
         center_y: f32,
@@ -189,7 +205,7 @@ pub mod robot {
             [rotation_angle.cos(), -rotation_angle.sin()],
             [rotation_angle.sin(), rotation_angle.cos()],
         ];
-        for vertex in &mut part.vertices {
+        for vertex in &mut *part.get_vertices() {
             let x = vertex.position[0] - center_x;
             let y = vertex.position[1] - center_y;
 
@@ -198,12 +214,14 @@ pub mod robot {
         }
 
         // modify tip of the chain
-        let x = part.tip.position[0] - center_x;
-        let y = part.tip.position[1] - center_y;
+        let x = part.get_tip().position[0] - center_x;
+        let y = part.get_tip().position[1] - center_y;
 
-        part.tip.position[0] = rotation_matrix[0][0] * x + rotation_matrix[0][1] * y + center_x;
-        part.tip.position[1] = rotation_matrix[1][0] * x + rotation_matrix[1][1] * y + center_y;
+        part.get_tip().position[0] =
+            rotation_matrix[0][0] * x + rotation_matrix[0][1] * y + center_x;
+        part.get_tip().position[1] =
+            rotation_matrix[1][0] * x + rotation_matrix[1][1] * y + center_y;
 
-        glium::VertexBuffer::new(disp, &part.vertices).unwrap()
+        glium::VertexBuffer::new(disp, &part.get_vertices()).unwrap()
     }
 }

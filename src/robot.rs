@@ -2,7 +2,7 @@ pub mod robot {
     use glium::glutin::surface::WindowSurface;
     use std::f32::consts::PI;
 
-    #[derive(Copy, Clone)]
+    #[derive(Copy, Clone, Debug)]
     pub struct Vertex {
         pub position: [f32; 2],
     }
@@ -17,7 +17,7 @@ pub mod robot {
         fn get_index_buf(&self) -> &glium::IndexBuffer<u32>;
         fn get_program(&self) -> &glium::program::Program;
         fn get_vertices(&mut self) -> &mut Vec<Vertex>;
-        fn get_tip(&mut self) -> &mut Vertex;
+        fn get_tip(&mut self) -> Option<&mut Vertex>;
     }
 
     pub struct Chain {
@@ -43,8 +43,8 @@ pub mod robot {
         fn get_vertices(&mut self) -> &mut Vec<Vertex> {
             &mut self.vertices
         }
-        fn get_tip(&mut self) -> &mut Vertex {
-            &mut self.tip
+        fn get_tip(&mut self) -> Option<&mut Vertex> {
+            Some(&mut self.tip)
         }
     }
 
@@ -69,32 +69,137 @@ pub mod robot {
         fn get_vertices(&mut self) -> &mut Vec<Vertex> {
             &mut self.vertices
         }
-        fn get_tip(&mut self) -> &mut Vertex {
-            &mut self.tip
+        fn get_tip(&mut self) -> Option<&mut Vertex> {
+            Some(&mut self.tip)
         }
     }
 
-    pub fn generate_claw(
+    pub struct Object {
+        pub vertices: Vec<Vertex>,
+        pub vertex_buffer: glium::VertexBuffer<Vertex>,
+        pub index_buffer: glium::IndexBuffer<u32>,
+        pub program: glium::program::Program,
+    }
+
+    impl Part for Object {
+        fn get_vertex_buf(&self) -> &glium::VertexBuffer<Vertex> {
+            &self.vertex_buffer
+        }
+        fn get_index_buf(&self) -> &glium::IndexBuffer<u32> {
+            &self.index_buffer
+        }
+        fn get_program(&self) -> &glium::program::Program {
+            &self.program
+        }
+        fn get_vertices(&mut self) -> &mut Vec<Vertex> {
+            &mut self.vertices
+        }
+        fn get_tip(&mut self) -> Option<&mut Vertex> {
+            None
+        }
+    }
+
+    pub fn generate_object(
         vertices: Vec<Vertex>,
         r: &str,
         g: &str,
         b: &str,
         disp: &glium::Display<WindowSurface>,
-    ) -> Claw {
-        let indices = (0..=2).collect();
+    ) -> Object {
+        let indices = (0..=3).collect();
         let (vertex_buffer, index_buffer) = generate_vertex_index_buffer(disp, &vertices, &indices);
         let program = generate_program(r, g, b, disp);
-        let tip = vertices[0];
-        Claw {
+        Object {
             vertices,
-            tip,
             vertex_buffer,
             index_buffer,
             program,
         }
     }
 
-    pub fn generate_joint(
+    pub fn generate_claws(
+        vertex: Vertex,
+        r: &str,
+        g: &str,
+        b: &str,
+        disp: &glium::Display<WindowSurface>,
+    ) -> (Claw, Claw) {
+        let claw1_vertices = vec![
+            Vertex {
+                position: [
+                    // root
+                    vertex.position[0],
+                    vertex.position[1] + DEF_THINNING + 0.01,
+                ],
+            },
+            Vertex {
+                position: [
+                    // middle
+                    vertex.position[0] + 0.01,
+                    vertex.position[1] + DEF_THINNING + 0.04,
+                ],
+            },
+            Vertex {
+                position: [
+                    // tip
+                    vertex.position[0] + 0.06,
+                    vertex.position[1] + DEF_THINNING + 0.03,
+                ],
+            },
+        ];
+
+        let claw2_vertices = vec![
+            Vertex {
+                position: [
+                    // root
+                    vertex.position[0],
+                    vertex.position[1] - DEF_THINNING - 0.01,
+                ],
+            },
+            Vertex {
+                position: [
+                    // middle
+                    vertex.position[0] + 0.01,
+                    vertex.position[1] - DEF_THINNING - 0.04,
+                ],
+            },
+            Vertex {
+                position: [
+                    // tip
+                    vertex.position[0] + 0.06,
+                    vertex.position[1] - DEF_THINNING - 0.03,
+                ],
+            },
+        ];
+
+        let indices = (0..=2).collect();
+        let (vertex_buffer1, index_buffer1) =
+            generate_vertex_index_buffer(disp, &claw1_vertices, &indices);
+        let (vertex_buffer2, index_buffer2) =
+            generate_vertex_index_buffer(disp, &claw2_vertices, &indices);
+        let program1 = generate_program(r, g, b, disp);
+        let program2 = generate_program(r, g, b, disp);
+        let tip1 = claw1_vertices[0];
+        let tip2 = claw2_vertices[0];
+        let claw1 = Claw {
+            vertices: claw1_vertices,
+            tip: tip1,
+            vertex_buffer: vertex_buffer1,
+            index_buffer: index_buffer1,
+            program: program1,
+        };
+
+        let claw2 = Claw {
+            vertices: claw2_vertices,
+            tip: tip2,
+            vertex_buffer: vertex_buffer2,
+            index_buffer: index_buffer2,
+            program: program2,
+        };
+        (claw1, claw2)
+    }
+
+    pub fn generate_chain(
         center_x: f32,
         center_y: f32,
         r: &str,
@@ -128,7 +233,7 @@ pub mod robot {
                 position: [center_x - DEF_RADIUS + DEF_THINNING, center_y + DEF_HEIGHT], // top left
             },
         ];
-        let mut indices: Vec<u32> = (0..=3).collect();
+        let mut indices: Vec<u32> = (0..=vertices.len() as u32).collect();
 
         // generate vertices and indices for circle
         let circle_segments = 100;
@@ -214,13 +319,18 @@ pub mod robot {
         }
 
         // modify tip of the chain
-        let x = part.get_tip().position[0] - center_x;
-        let y = part.get_tip().position[1] - center_y;
-
-        part.get_tip().position[0] =
-            rotation_matrix[0][0] * x + rotation_matrix[0][1] * y + center_x;
-        part.get_tip().position[1] =
-            rotation_matrix[1][0] * x + rotation_matrix[1][1] * y + center_y;
+        let tip = part.get_tip();
+        match tip {
+            Some(vertex) => {
+                let x = vertex.position[0] - center_x;
+                let y = vertex.position[1] - center_y;
+                vertex.position[0] =
+                    rotation_matrix[0][0] * x + rotation_matrix[0][1] * y + center_x;
+                vertex.position[1] =
+                    rotation_matrix[1][0] * x + rotation_matrix[1][1] * y + center_y;
+            }
+            None => {}
+        }
 
         glium::VertexBuffer::new(disp, &part.get_vertices()).unwrap()
     }

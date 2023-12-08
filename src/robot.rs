@@ -11,6 +11,7 @@ pub mod robot {
     const DEF_RADIUS: f32 = 0.05;
     pub const DEF_THINNING: f32 = 0.02;
     pub const DEF_HEIGHT: f32 = 0.4;
+    pub const GROUND: f32 = -0.45;
 
     pub trait Part {
         fn get_vertex_buf(&self) -> &glium::VertexBuffer<Vertex>;
@@ -332,6 +333,16 @@ pub mod robot {
             None => {}
         }
 
+        glium::VertexBuffer::new(disp, &part.get_vertices()).unwrap()
+    }
+
+    pub fn gravity(
+        part: &mut dyn Part,
+        disp: &glium::Display<WindowSurface>,
+    ) -> glium::VertexBuffer<Vertex> {
+        for vertex in &mut *part.get_vertices() {
+            vertex.position[1] -= 0.01;
+        }
         glium::VertexBuffer::new(disp, &part.get_vertices()).unwrap()
     }
 

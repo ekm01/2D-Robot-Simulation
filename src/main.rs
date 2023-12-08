@@ -4,8 +4,8 @@ extern crate glium;
 mod robot;
 
 use robot::robot::{
-    detect_collision, generate_chain, generate_claws, generate_object, rotate, Part, Vertex,
-    DEF_HEIGHT,
+    detect_collision, generate_chain, generate_claws, generate_object, gravity, rotate, Part,
+    Vertex, DEF_HEIGHT, GROUND,
 };
 
 use glium::Surface;
@@ -44,16 +44,16 @@ fn main() {
     );
 
     let vertex1 = Vertex {
-        position: [0.15, -0.5], //bl
+        position: [0.15, -0.45], //bl
     };
     let vertex2 = Vertex {
-        position: [0.2, -0.5], //br
+        position: [0.2, -0.45], //br
     };
     let vertex3 = Vertex {
-        position: [0.2, -0.4], //tr
+        position: [0.2, -0.35], //tr
     };
     let vertex4 = Vertex {
-        position: [0.15, -0.4], //tl
+        position: [0.15, -0.35], //tl
     };
 
     let vertices = vec![vertex1, vertex2, vertex3, vertex4];
@@ -248,11 +248,18 @@ fn main() {
         // set canvas color
         frame.clear_color(1.0, 1.0, 1.0, 1.0);
 
+        if _object == 0 {
+            if obj.vertices[0].position[1] > GROUND {
+                obj.vertex_buffer = gravity(&mut obj, &display);
+                draw(&mut frame, &mut obj);
+            }
+        }
+
         // draw chains
-        draw(&mut frame, &mut obj);
         draw(&mut frame, &mut chain1);
         draw(&mut frame, &mut chain2);
         draw(&mut frame, &mut chain3);
+        draw(&mut frame, &mut obj);
         draw(&mut frame, &mut claw1);
         draw(&mut frame, &mut claw2);
 

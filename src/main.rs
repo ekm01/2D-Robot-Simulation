@@ -4,7 +4,8 @@ extern crate glium;
 mod robot;
 
 use robot::robot::{
-    generate_chain, generate_claws, generate_object, rotate, Claw, Part, Vertex, DEF_HEIGHT,
+    detect_collision, generate_chain, generate_claws, generate_object, rotate, Part, Vertex,
+    DEF_HEIGHT,
 };
 
 use glium::Surface;
@@ -269,59 +270,4 @@ fn draw(frame: &mut glium::Frame, chain: &mut dyn Part) {
             &Default::default(),
         )
         .unwrap();
-}
-
-fn check_boundaries(ray_start: &Vertex, first: &Vertex, second: &Vertex) -> bool {
-    let (x, y) = (ray_start.position[0], ray_start.position[1]);
-    let (x1, y1) = (first.position[0], first.position[1]);
-    let (x2, y2) = (second.position[0], second.position[1]);
-
-    if ((y1 <= y && y < y2) || (y2 <= y && y < y1)) && x < f32::max(x1, x2) {
-        return true;
-    }
-    false
-}
-
-fn ray_edge_intersect(ray_start: &Vertex, first: &Vertex, second: &Vertex) -> f32 {
-    let (x, y) = (ray_start.position[0], ray_start.position[1]);
-    let (x1, y1) = (first.position[0], first.position[1]);
-    let (x2, y2) = (second.position[0], second.position[1]);
-
-    let scaling_factor = ((x1 - x) * (y2 - y1) - (y1 - y) * (x2 - x1)) / (y2 - y1);
-
-    x + scaling_factor + 0.07
-}
-
-fn detect_collision(claw1: &Claw, claw2: &Claw, vertices: &Vec<Vertex>) -> bool {
-    let mut res = false;
-    let length = vertices.len();
-
-    // number of intersections
-    let (mut num_intersec_right, mut num_intersec_left) = (0, 0);
-    for i in 0..length {
-        // get all the edges in a cyclic manner
-        let first = vertices[i];
-        let second = vertices[(i + 1) % length];
-
-        if check_boundaries(&claw1.vertices[2], &first, &second)
-            && check_boundaries(&claw2.vertices[2], &first, &second)
-        {
-            let intersec_right = ray_edge_intersect(&claw1.vertices[2], &first, &second);
-            let intersec_left = ray_edge_intersect(&claw2.vertices[2], &first, &second);
-
-            if claw1.vertices[2].position[0] < intersec_right {
-                num_intersec_right += 1;
-            }
-
-            if claw2.vertices[2].position[0] < intersec_left {
-                num_intersec_left += 1;
-            }
-        }
-    }
-
-    if num_intersec_left % 2 == 1 && num_intersec_right % 2 == 1 {
-        res = true;
-    }
-
-    res
 }

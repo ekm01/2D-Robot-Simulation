@@ -1,5 +1,6 @@
 pub mod robot {
-    use glium::glutin::surface::WindowSurface;
+    use glium::{glutin::surface::WindowSurface, VertexBuffer};
+    use std::collections::HashMap;
     use std::f32::consts::PI;
 
     #[derive(Copy, Clone, Debug)]
@@ -11,13 +12,15 @@ pub mod robot {
     const DEF_RADIUS: f32 = 0.05;
     pub const DEF_THINNING: f32 = 0.02;
     pub const DEF_HEIGHT: f32 = 0.4;
-    pub const GROUND: f32 = -0.45;
+    pub const GROUND: f32 = -0.43;
 
     pub trait Part {
         fn get_vertex_buf(&self) -> &glium::VertexBuffer<Vertex>;
+        fn set_vertex_buf(&mut self, value: VertexBuffer<Vertex>);
         fn get_index_buf(&self) -> &glium::IndexBuffer<u32>;
         fn get_program(&self) -> &glium::program::Program;
         fn get_vertices(&mut self) -> &mut Vec<Vertex>;
+        fn get_vertices_ref(&self) -> &Vec<Vertex>;
         fn get_tip(&mut self) -> Option<&mut Vertex>;
     }
 
@@ -35,6 +38,9 @@ pub mod robot {
         fn get_vertex_buf(&self) -> &glium::VertexBuffer<Vertex> {
             &self.vertex_buffer
         }
+        fn set_vertex_buf(&mut self, value: VertexBuffer<Vertex>) {
+            self.vertex_buffer = value;
+        }
         fn get_index_buf(&self) -> &glium::IndexBuffer<u32> {
             &self.index_buffer
         }
@@ -43,6 +49,9 @@ pub mod robot {
         }
         fn get_vertices(&mut self) -> &mut Vec<Vertex> {
             &mut self.vertices
+        }
+        fn get_vertices_ref(&self) -> &Vec<Vertex> {
+            &self.vertices
         }
         fn get_tip(&mut self) -> Option<&mut Vertex> {
             Some(&mut self.tip)
@@ -61,6 +70,9 @@ pub mod robot {
         fn get_vertex_buf(&self) -> &glium::VertexBuffer<Vertex> {
             &self.vertex_buffer
         }
+        fn set_vertex_buf(&mut self, value: VertexBuffer<Vertex>) {
+            self.vertex_buffer = value;
+        }
         fn get_index_buf(&self) -> &glium::IndexBuffer<u32> {
             &self.index_buffer
         }
@@ -69,6 +81,9 @@ pub mod robot {
         }
         fn get_vertices(&mut self) -> &mut Vec<Vertex> {
             &mut self.vertices
+        }
+        fn get_vertices_ref(&self) -> &Vec<Vertex> {
+            &self.vertices
         }
         fn get_tip(&mut self) -> Option<&mut Vertex> {
             Some(&mut self.tip)
@@ -86,6 +101,9 @@ pub mod robot {
         fn get_vertex_buf(&self) -> &glium::VertexBuffer<Vertex> {
             &self.vertex_buffer
         }
+        fn set_vertex_buf(&mut self, value: VertexBuffer<Vertex>) {
+            self.vertex_buffer = value;
+        }
         fn get_index_buf(&self) -> &glium::IndexBuffer<u32> {
             &self.index_buffer
         }
@@ -94,6 +112,9 @@ pub mod robot {
         }
         fn get_vertices(&mut self) -> &mut Vec<Vertex> {
             &mut self.vertices
+        }
+        fn get_vertices_ref(&self) -> &Vec<Vertex> {
+            &self.vertices
         }
         fn get_tip(&mut self) -> Option<&mut Vertex> {
             None
@@ -124,7 +145,7 @@ pub mod robot {
         g: &str,
         b: &str,
         disp: &glium::Display<WindowSurface>,
-    ) -> (Claw, Claw) {
+    ) -> (Box<dyn Part>, Box<dyn Part>) {
         let claw1_vertices = vec![
             Vertex {
                 position: [
@@ -197,7 +218,7 @@ pub mod robot {
             index_buffer: index_buffer2,
             program: program2,
         };
-        (claw1, claw2)
+        (Box::new(claw1), Box::new(claw2))
     }
 
     pub fn generate_chain(
@@ -336,7 +357,20 @@ pub mod robot {
         glium::VertexBuffer::new(disp, &part.get_vertices()).unwrap()
     }
 
-    pub fn gravity(
+    pub fn rotate_all(
+        angle: f32,
+        parts: &mut HashMap<&str, Box<dyn Part>>,
+        disp: &glium::Display<WindowSurface>,
+        center_x: f32,
+        center_y: f32,
+    ) {
+        for (_, part) in parts.iter_mut() {
+            let vertexbuf = rotate(angle, part.as_mut(), disp, center_x, center_y);
+            part.set_vertex_buf(vertexbuf);
+        }
+    }
+
+    pub fn apply_gravity(
         part: &mut dyn Part,
         disp: &glium::Display<WindowSurface>,
     ) -> glium::VertexBuffer<Vertex> {
@@ -346,7 +380,7 @@ pub mod robot {
         glium::VertexBuffer::new(disp, &part.get_vertices()).unwrap()
     }
 
-    fn check_boundaries(ray_start: &Vertex, first: &Vertex, second: &Vertex) -> bool {
+    fn check_boundaries(ray_start: Vertex, first: Vertex, second: Vertex) -> bool {
         let (x, y) = (ray_start.position[0], ray_start.position[1]);
         let (x1, y1) = (first.position[0], first.position[1]);
         let (x2, y2) = (second.position[0], second.position[1]);
@@ -357,7 +391,7 @@ pub mod robot {
         false
     }
 
-    fn ray_edge_intersect(ray_start: &Vertex, first: &Vertex, second: &Vertex) -> f32 {
+    fn ray_edge_intersect(ray_start: Vertex, first: Vertex, second: Vertex) -> f32 {
         let (x, y) = (ray_start.position[0], ray_start.position[1]);
         let (x1, y1) = (first.position[0], first.position[1]);
         let (x2, y2) = (second.position[0], second.position[1]);
@@ -367,7 +401,7 @@ pub mod robot {
         x + scaling_factor + 0.07
     }
 
-    pub fn detect_collision(claw1: &Claw, claw2: &Claw, vertices: &Vec<Vertex>) -> bool {
+    pub fn detect_collision(claw1: &dyn Part, claw2: &dyn Part, vertices: &Vec<Vertex>) -> bool {
         let mut res = false;
         let length = vertices.len();
 
@@ -378,17 +412,17 @@ pub mod robot {
             let first = vertices[i];
             let second = vertices[(i + 1) % length];
 
-            if check_boundaries(&claw1.vertices[2], &first, &second)
-                && check_boundaries(&claw2.vertices[2], &first, &second)
+            if check_boundaries(claw1.get_vertices_ref()[2], first, second)
+                && check_boundaries(claw2.get_vertices_ref()[2], first, second)
             {
-                let intersec_right = ray_edge_intersect(&claw1.vertices[2], &first, &second);
-                let intersec_left = ray_edge_intersect(&claw2.vertices[2], &first, &second);
+                let intersec_right = ray_edge_intersect(claw1.get_vertices_ref()[2], first, second);
+                let intersec_left = ray_edge_intersect(claw2.get_vertices_ref()[2], first, second);
 
-                if claw1.vertices[2].position[0] < intersec_right {
+                if claw1.get_vertices_ref()[2].position[0] < intersec_right {
                     num_intersec_right += 1;
                 }
 
-                if claw2.vertices[2].position[0] < intersec_left {
+                if claw2.get_vertices_ref()[2].position[0] < intersec_left {
                     num_intersec_left += 1;
                 }
             }

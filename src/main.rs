@@ -270,6 +270,8 @@ fn main() {
                 &mut parts,
                 &display,
                 base_value.unwrap(),
+                &mut obj,
+                &mut _object,
             );
         }
 
@@ -289,6 +291,8 @@ fn main() {
                 &mut parts,
                 &display,
                 state_value.unwrap(),
+                &mut obj,
+                &mut _object,
             );
         }
 

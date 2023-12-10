@@ -394,16 +394,24 @@ pub mod robot {
         parts: &mut HashMap<&str, Box<dyn Part>>,
         disp: &glium::Display<WindowSurface>,
         state: &mut State,
+        obj: &mut Object,
+        _object: &mut i32,
     ) {
         match *_state {
             (1, 0, 0, 0) => {
                 if *lr1.0 > state.l1 {
                     rotate_all(3.0, parts, disp, r1.0, r1.1);
+                    if *_object == 1 {
+                        obj.vertex_buffer = rotate(3.0, obj, disp, r1.0, r1.1);
+                    }
 
                     *lr1.0 -= 1;
                     *lr1.1 += 1;
                 } else if *lr1.0 < state.l1 {
                     rotate_all(-3.0, parts, disp, r1.0, r1.1);
+                    if *_object == 1 {
+                        obj.vertex_buffer = rotate(-3.0, obj, disp, r1.0, r1.1);
+                    }
 
                     *lr1.0 += 1;
                     *lr1.1 -= 1;
@@ -418,12 +426,20 @@ pub mod robot {
                     rotate_all(3.0, parts, disp, r2.0, r2.1);
                     parts.insert("chain1", chain1);
 
+                    if *_object == 1 {
+                        obj.vertex_buffer = rotate(3.0, obj, disp, r2.0, r2.1);
+                    }
+
                     *lr2.0 -= 1;
                     *lr2.1 += 1;
                 } else if *lr2.0 < state.l2 {
                     let chain1 = parts.remove("chain1").unwrap();
                     rotate_all(-3.0, parts, disp, r2.0, r2.1);
                     parts.insert("chain1", chain1);
+
+                    if *_object == 1 {
+                        obj.vertex_buffer = rotate(-3.0, obj, disp, r2.0, r2.1);
+                    }
 
                     *lr2.0 += 1;
                     *lr2.1 -= 1;
@@ -440,6 +456,10 @@ pub mod robot {
                     parts.insert("chain1", chain1);
                     parts.insert("chain2", chain2);
 
+                    if *_object == 1 {
+                        obj.vertex_buffer = rotate(3.0, obj, disp, r3.0, r3.1);
+                    }
+
                     *lr3.0 -= 1;
                     *lr3.1 += 1;
                 } else if *lr3.0 < state.l3 {
@@ -448,6 +468,10 @@ pub mod robot {
                     rotate_all(-3.0, parts, disp, r3.0, r3.1);
                     parts.insert("chain1", chain1);
                     parts.insert("chain2", chain2);
+
+                    if *_object == 1 {
+                        obj.vertex_buffer = rotate(-3.0, obj, disp, r3.0, r3.1);
+                    }
 
                     *lr3.0 += 1;
                     *lr3.1 -= 1;
@@ -475,6 +499,14 @@ pub mod robot {
                     parts.get_mut("claw1").unwrap().set_vertex_buf(claw1_vb);
                     parts.get_mut("claw2").unwrap().set_vertex_buf(claw2_vb);
 
+                    if !detect_collision(
+                        parts.get("claw1").unwrap().as_ref(),
+                        parts.get("claw2").unwrap().as_ref(),
+                        &obj.vertices,
+                    ) {
+                        *_object = 0;
+                    }
+
                     *lr4.0 -= 1;
                     *lr4.1 += 1;
                 } else if *lr4.0 < state.l4 {
@@ -494,6 +526,14 @@ pub mod robot {
                     );
                     parts.get_mut("claw1").unwrap().set_vertex_buf(claw1_vb);
                     parts.get_mut("claw2").unwrap().set_vertex_buf(claw2_vb);
+
+                    if detect_collision(
+                        parts.get("claw1").unwrap().as_ref(),
+                        parts.get("claw2").unwrap().as_ref(),
+                        &obj.vertices,
+                    ) {
+                        *_object = 1;
+                    }
 
                     *lr4.0 += 1;
                     *lr4.1 -= 1;

@@ -86,6 +86,9 @@ fn main() {
                                     _state = (1, 0, 0, 0);
                                 }
                             }
+                            Some(winit::event::VirtualKeyCode::L) => {
+                                _object = 0;
+                            }
                             Some(winit::event::VirtualKeyCode::B) => {
                                 _base = (1, 0, 0, 0);
                             }

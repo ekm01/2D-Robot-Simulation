@@ -4,8 +4,8 @@ extern crate glium;
 mod robot;
 
 use robot::robot::{
-    apply_gravity, base, create, detect_collision, execute, rotate, rotate_all, Part, State,
-    DEF_HEIGHT, GROUND,
+    apply_gravity, create, detect_collision, execute, rotate, rotate_all, Part, State, DEF_HEIGHT,
+    GROUND,
 };
 
 use glium::{glutin::surface::WindowSurface, Surface};
@@ -37,6 +37,12 @@ fn main() {
 
     let mut jobs: Vec<State> = Vec::new();
     let mut state = None;
+    let mut base_state = Some(State {
+        l1: _left_chain1,
+        l2: _left_chain2,
+        l3: _left_chain3,
+        l4: _left_claw,
+    });
 
     event_loop.run(move |ev, _, control_flow| {
         let mut frame = display.draw();
@@ -76,11 +82,8 @@ fn main() {
                             }
                             Some(winit::event::VirtualKeyCode::E) => {
                                 state = jobs.pop();
-                                match state {
-                                    Some(_) => {
-                                        _state = (1, 0, 0, 0);
-                                    }
-                                    None => {}
+                                if state.is_some() {
+                                    _state = (1, 0, 0, 0);
                                 }
                             }
                             Some(winit::event::VirtualKeyCode::B) => {
@@ -251,20 +254,25 @@ fn main() {
             }
         }
 
-        base(
-            (&mut _left_chain1, &mut _right_chain1),
-            (&mut _left_chain2, &mut _right_chain2),
-            (&mut _left_chain3, &mut _right_chain3),
-            (&mut _left_claw, &mut _right_claw),
-            &mut _base,
-            (origin_x, origin_y),
-            (chain2_x, chain2_y),
-            (chain3_x, chain3_y),
-            (claw1_x, claw1_y),
-            (claw2_x, claw2_y),
-            &mut parts,
-            &display,
-        );
+        let base_value = base_state.as_mut();
+        if base_value.is_some() {
+            execute(
+                (&mut _left_chain1, &mut _right_chain1),
+                (&mut _left_chain2, &mut _right_chain2),
+                (&mut _left_chain3, &mut _right_chain3),
+                (&mut _left_claw, &mut _right_claw),
+                &mut _base,
+                (origin_x, origin_y),
+                (chain2_x, chain2_y),
+                (chain3_x, chain3_y),
+                (claw1_x, claw1_y),
+                (claw2_x, claw2_y),
+                &mut parts,
+                &display,
+                base_value.unwrap(),
+            );
+        }
+
         let state_value = state.as_mut();
         if state_value.is_some() {
             execute(

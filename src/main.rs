@@ -7,9 +7,6 @@ use robot::robot::{
     apply_gravity, base, create, detect_collision, rotate, rotate_all, Part, DEF_HEIGHT, GROUND,
 };
 
-use std::thread;
-use std::time::Duration;
-
 use glium::{glutin::surface::WindowSurface, Surface};
 
 fn main() {
@@ -34,7 +31,7 @@ fn main() {
     let (mut _left_chain3, mut _right_chain3) = (30, 24);
     let (mut _left_claw, mut _right_claw) = (0, 9);
     let mut _object = 0;
-    let mut _base = (0, 0, 0);
+    let mut _base = (0, 0, 0, 0);
 
     event_loop.run(move |ev, _, control_flow| {
         let mut frame = display.draw();
@@ -64,10 +61,10 @@ fn main() {
                     if input.state == winit::event::ElementState::Pressed {
                         match input.virtual_keycode {
                             Some(winit::event::VirtualKeyCode::T) => {
-                                _base = (1, 0, 0);
+                                _base = (1, 0, 0, 0);
                             }
                             Some(winit::event::VirtualKeyCode::B) => {
-                                _base = (1, 0, 0);
+                                _base = (1, 0, 0, 0);
                             }
                             Some(winit::event::VirtualKeyCode::Q) => {
                                 if _left_chain1 > 0 {
@@ -238,10 +235,13 @@ fn main() {
             (&mut _left_chain1, &mut _right_chain1),
             (&mut _left_chain2, &mut _right_chain2),
             (&mut _left_chain3, &mut _right_chain3),
+            (&mut _left_claw, &mut _right_claw),
             &mut _base,
             (origin_x, origin_y),
             (chain2_x, chain2_y),
             (chain3_x, chain3_y),
+            (claw1_x, claw1_y),
+            (claw2_x, claw2_y),
             &mut parts,
             &display,
         );

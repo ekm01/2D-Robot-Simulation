@@ -370,6 +370,67 @@ pub mod robot {
         }
     }
 
+    pub fn base(
+        lr1: (&mut i32, &mut i32),
+        lr2: (&mut i32, &mut i32),
+        lr3: (&mut i32, &mut i32),
+        _base: &mut (i32, i32, i32),
+        r1: (f32, f32),
+        r2: (f32, f32),
+        r3: (f32, f32),
+        parts: &mut HashMap<&str, Box<dyn Part>>,
+        disp: &glium::Display<WindowSurface>,
+    ) {
+        match *_base {
+            (1, 0, 0) => {
+                if *lr1.0 != 0 {
+                    rotate_all(3.0, parts, disp, r1.0, r1.1);
+
+                    *lr1.0 -= 1;
+                    *lr1.1 += 1;
+                } else {
+                    *_base = (0, 1, 0);
+                }
+            }
+            (0, 1, 0) => {
+                if *lr2.0 != 0 {
+                    let chain1 = parts.remove("chain1").unwrap();
+                    rotate_all(3.0, parts, disp, r2.0, r2.1);
+                    parts.insert("chain1", chain1);
+
+                    *lr2.0 -= 1;
+                    *lr2.1 += 1;
+                } else {
+                    *_base = (0, 0, 1);
+                }
+            }
+            (0, 0, 1) => {
+                if *lr3.0 > 30 {
+                    let chain1 = parts.remove("chain1").unwrap();
+                    let chain2 = parts.remove("chain2").unwrap();
+                    rotate_all(3.0, parts, disp, r3.0, r3.1);
+                    parts.insert("chain1", chain1);
+                    parts.insert("chain2", chain2);
+
+                    *lr3.0 -= 1;
+                    *lr3.1 += 1;
+                } else if *lr3.0 < 30 {
+                    let chain1 = parts.remove("chain1").unwrap();
+                    let chain2 = parts.remove("chain2").unwrap();
+                    rotate_all(-3.0, parts, disp, r3.0, r3.1);
+                    parts.insert("chain1", chain1);
+                    parts.insert("chain2", chain2);
+
+                    *lr3.0 += 1;
+                    *lr3.1 -= 1;
+                } else {
+                    *_base = (0, 0, 0);
+                }
+            }
+            _ => {}
+        }
+    }
+
     pub fn apply_gravity(
         part: &mut dyn Part,
         disp: &glium::Display<WindowSurface>,

@@ -4,8 +4,11 @@ extern crate glium;
 mod robot;
 
 use robot::robot::{
-    apply_gravity, create, detect_collision, rotate, rotate_all, Part, DEF_HEIGHT, GROUND,
+    apply_gravity, base, create, detect_collision, rotate, rotate_all, Part, DEF_HEIGHT, GROUND,
 };
+
+use std::thread;
+use std::time::Duration;
 
 use glium::{glutin::surface::WindowSurface, Surface};
 
@@ -31,13 +34,26 @@ fn main() {
     let (mut _left_chain3, mut _right_chain3) = (30, 24);
     let (mut _left_claw, mut _right_claw) = (0, 9);
     let mut _object = 0;
-    let mut _base = 0;
+    let mut _base = (0, 0, 0);
 
     event_loop.run(move |ev, _, control_flow| {
         let mut frame = display.draw();
 
         // set canvas color
         frame.clear_color(1.0, 1.0, 1.0, 1.0);
+
+        // rotation points
+        let chain2_x = parts.get_mut("chain1").unwrap().get_tip().unwrap().position[0];
+        let chain2_y = parts.get_mut("chain1").unwrap().get_tip().unwrap().position[1];
+
+        let chain3_x = parts.get_mut("chain2").unwrap().get_tip().unwrap().position[0];
+        let chain3_y = parts.get_mut("chain2").unwrap().get_tip().unwrap().position[1];
+
+        let claw1_x = parts.get_mut("claw1").unwrap().get_tip().unwrap().position[0];
+        let claw1_y = parts.get_mut("claw1").unwrap().get_tip().unwrap().position[1];
+
+        let claw2_x = parts.get_mut("claw2").unwrap().get_tip().unwrap().position[0];
+        let claw2_y = parts.get_mut("claw2").unwrap().get_tip().unwrap().position[1];
 
         match ev {
             winit::event::Event::WindowEvent { event, .. } => match event {
@@ -46,29 +62,12 @@ fn main() {
                 }
                 winit::event::WindowEvent::KeyboardInput { input, .. } => {
                     if input.state == winit::event::ElementState::Pressed {
-                        let chain2_x =
-                            parts.get_mut("chain1").unwrap().get_tip().unwrap().position[0];
-                        let chain2_y =
-                            parts.get_mut("chain1").unwrap().get_tip().unwrap().position[1];
-
-                        let chain3_x =
-                            parts.get_mut("chain2").unwrap().get_tip().unwrap().position[0];
-                        let chain3_y =
-                            parts.get_mut("chain2").unwrap().get_tip().unwrap().position[1];
-
-                        let claw1_x =
-                            parts.get_mut("claw1").unwrap().get_tip().unwrap().position[0];
-                        let claw1_y =
-                            parts.get_mut("claw1").unwrap().get_tip().unwrap().position[1];
-
-                        let claw2_x =
-                            parts.get_mut("claw2").unwrap().get_tip().unwrap().position[0];
-                        let claw2_y =
-                            parts.get_mut("claw2").unwrap().get_tip().unwrap().position[1];
-
                         match input.virtual_keycode {
+                            Some(winit::event::VirtualKeyCode::T) => {
+                                _base = (1, 0, 0);
+                            }
                             Some(winit::event::VirtualKeyCode::B) => {
-                                _base = 1;
+                                _base = (1, 0, 0);
                             }
                             Some(winit::event::VirtualKeyCode::Q) => {
                                 if _left_chain1 > 0 {
@@ -235,14 +234,17 @@ fn main() {
             }
         }
 
-        if _base == 1 && _left_chain1 != 0 {
-            rotate_all(3.0, &mut parts, &display, origin_x, origin_y);
-            _left_chain1 -= 1;
-            if _left_chain1 == 0 {
-                _base = 0;
-            }
-            _right_chain1 += 1;
-        }
+        base(
+            (&mut _left_chain1, &mut _right_chain1),
+            (&mut _left_chain2, &mut _right_chain2),
+            (&mut _left_chain3, &mut _right_chain3),
+            &mut _base,
+            (origin_x, origin_y),
+            (chain2_x, chain2_y),
+            (chain3_x, chain3_y),
+            &mut parts,
+            &display,
+        );
 
         // draw chains
         draw(&mut frame, parts.get_mut("chain1").unwrap().as_mut());

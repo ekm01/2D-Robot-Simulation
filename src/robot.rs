@@ -434,4 +434,63 @@ pub mod robot {
 
         res
     }
+
+    pub fn create(
+        display: &glium::Display<WindowSurface>,
+    ) -> (HashMap<&str, Box<dyn Part>>, Object) {
+        let mut chain1: Box<dyn Part> =
+            Box::new(generate_chain(-0.5, -0.4, "1.0", "0.6", "0.0", display));
+        let mut chain2: Box<dyn Part> = Box::new(generate_chain(
+            chain1.get_tip().unwrap().position[0],
+            chain1.get_tip().unwrap().position[1],
+            "0.0",
+            "1.0",
+            "0.0",
+            display,
+        ));
+        let mut chain3: Box<dyn Part> = Box::new(generate_chain(
+            chain2.get_tip().unwrap().position[0],
+            chain2.get_tip().unwrap().position[1],
+            "0.0",
+            "0.0",
+            "1.0",
+            display,
+        ));
+        let chain3_buf = rotate(
+            -90.0,
+            chain3.as_mut(),
+            display,
+            chain2.get_tip().unwrap().position[0],
+            chain2.get_tip().unwrap().position[1],
+        );
+
+        chain3.set_vertex_buf(chain3_buf);
+
+        let vertex1 = Vertex {
+            position: [0.15, -0.45], //bl
+        };
+        let vertex2 = Vertex {
+            position: [0.2, -0.45], //br
+        };
+        let vertex3 = Vertex {
+            position: [0.2, -0.35], //tr
+        };
+        let vertex4 = Vertex {
+            position: [0.15, -0.35], //tl
+        };
+
+        let vertices = vec![vertex1, vertex2, vertex3, vertex4];
+
+        let obj = generate_object(vertices, "0.0", "0.0", "0.0", display);
+
+        let (claw1, claw2) =
+            generate_claws(*chain3.get_tip().unwrap(), "1.0", "0.0", "0.0", display);
+        let mut parts: HashMap<&str, Box<dyn Part>> = HashMap::new();
+        parts.insert("chain1", chain1);
+        parts.insert("chain2", chain2);
+        parts.insert("chain3", chain3);
+        parts.insert("claw1", claw1);
+        parts.insert("claw2", claw2);
+        (parts, obj)
+    }
 }

@@ -3,14 +3,11 @@ extern crate glium;
 
 mod robot;
 
-use std::collections::HashMap;
-
 use robot::robot::{
-    apply_gravity, detect_collision, generate_chain, generate_claws, generate_object, rotate,
-    rotate_all, Part, Vertex, DEF_HEIGHT, GROUND,
+    apply_gravity, create, detect_collision, rotate, rotate_all, Part, DEF_HEIGHT, GROUND,
 };
 
-use glium::Surface;
+use glium::{glutin::surface::WindowSurface, Surface};
 
 fn main() {
     let event_loop = winit::event_loop::EventLoopBuilder::new().build();
@@ -20,56 +17,12 @@ fn main() {
         .with_inner_size(primary_monitor.size().width, primary_monitor.size().height)
         .build(&event_loop);
 
-    let mut chain1: Box<dyn Part> =
-        Box::new(generate_chain(-0.5, -0.4, "1.0", "0.6", "0.0", &display));
-    let mut chain2: Box<dyn Part> = Box::new(generate_chain(
-        chain1.get_tip().unwrap().position[0],
-        chain1.get_tip().unwrap().position[1],
-        "0.0",
-        "1.0",
-        "0.0",
-        &display,
-    ));
-    let mut chain3: Box<dyn Part> = Box::new(generate_chain(
-        chain2.get_tip().unwrap().position[0],
-        chain2.get_tip().unwrap().position[1],
-        "0.0",
-        "0.0",
-        "1.0",
-        &display,
-    ));
-    let chain3_buf = rotate(
-        -90.0,
-        chain3.as_mut(),
-        &display,
-        chain2.get_tip().unwrap().position[0],
-        chain2.get_tip().unwrap().position[1],
-    );
-
-    chain3.set_vertex_buf(chain3_buf);
-
-    let vertex1 = Vertex {
-        position: [0.15, -0.45], //bl
-    };
-    let vertex2 = Vertex {
-        position: [0.2, -0.45], //br
-    };
-    let vertex3 = Vertex {
-        position: [0.2, -0.35], //tr
-    };
-    let vertex4 = Vertex {
-        position: [0.15, -0.35], //tl
-    };
-
-    let vertices = vec![vertex1, vertex2, vertex3, vertex4];
-
-    let mut obj = generate_object(vertices, "0.0", "0.0", "0.0", &display);
-
-    let (claw1, claw2) = generate_claws(*chain3.get_tip().unwrap(), "1.0", "0.0", "0.0", &display);
+    let display: &'static glium::Display<WindowSurface> = Box::leak(Box::new(display));
+    let (mut parts, mut obj) = create(&display);
 
     let (origin_x, origin_y) = (
-        chain1.get_tip().unwrap().position[0],
-        chain1.get_tip().unwrap().position[1] - DEF_HEIGHT,
+        parts.get_mut("chain1").unwrap().get_tip().unwrap().position[0],
+        parts.get_mut("chain1").unwrap().get_tip().unwrap().position[1] - DEF_HEIGHT,
     );
 
     // amount of rotations left in both directions
@@ -79,14 +32,6 @@ fn main() {
     let (mut _left_claw, mut _right_claw) = (0, 9);
     let mut _object = 0;
     let mut _base = 0;
-
-    let mut parts: HashMap<&str, Box<dyn Part>> = HashMap::new();
-
-    parts.insert("chain1", chain1);
-    parts.insert("chain2", chain2);
-    parts.insert("chain3", chain3);
-    parts.insert("claw1", claw1);
-    parts.insert("claw2", claw2);
 
     event_loop.run(move |ev, _, control_flow| {
         let mut frame = display.draw();

@@ -4,7 +4,8 @@ extern crate glium;
 mod robot;
 
 use robot::robot::{
-    apply_gravity, base, create, detect_collision, rotate, rotate_all, Part, DEF_HEIGHT, GROUND,
+    apply_gravity, base, create, detect_collision, execute, rotate, rotate_all, Part, State,
+    DEF_HEIGHT, GROUND,
 };
 
 use glium::{glutin::surface::WindowSurface, Surface};
@@ -32,6 +33,10 @@ fn main() {
     let (mut _left_claw, mut _right_claw) = (0, 9);
     let mut _object = 0;
     let mut _base = (0, 0, 0, 0);
+    let mut _state = (0, 0, 0, 0);
+
+    let mut jobs: Vec<State> = Vec::new();
+    let mut state = None;
 
     event_loop.run(move |ev, _, control_flow| {
         let mut frame = display.draw();
@@ -61,7 +66,22 @@ fn main() {
                     if input.state == winit::event::ElementState::Pressed {
                         match input.virtual_keycode {
                             Some(winit::event::VirtualKeyCode::T) => {
-                                _base = (1, 0, 0, 0);
+                                let state = State {
+                                    l1: _left_chain1,
+                                    l2: _left_chain2,
+                                    l3: _left_chain3,
+                                    l4: _left_claw,
+                                };
+                                jobs.insert(0, state);
+                            }
+                            Some(winit::event::VirtualKeyCode::E) => {
+                                state = jobs.pop();
+                                match state {
+                                    Some(_) => {
+                                        _state = (1, 0, 0, 0);
+                                    }
+                                    None => {}
+                                }
                             }
                             Some(winit::event::VirtualKeyCode::B) => {
                                 _base = (1, 0, 0, 0);
@@ -245,6 +265,24 @@ fn main() {
             &mut parts,
             &display,
         );
+        let state_value = state.as_mut();
+        if state_value.is_some() {
+            execute(
+                (&mut _left_chain1, &mut _right_chain1),
+                (&mut _left_chain2, &mut _right_chain2),
+                (&mut _left_chain3, &mut _right_chain3),
+                (&mut _left_claw, &mut _right_claw),
+                &mut _state,
+                (origin_x, origin_y),
+                (chain2_x, chain2_y),
+                (chain3_x, chain3_y),
+                (claw1_x, claw1_y),
+                (claw2_x, claw2_y),
+                &mut parts,
+                &display,
+                state_value.unwrap(),
+            );
+        }
 
         // draw chains
         draw(&mut frame, parts.get_mut("chain1").unwrap().as_mut());

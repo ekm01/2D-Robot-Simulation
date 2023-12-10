@@ -17,10 +17,11 @@ pub mod robot {
     pub const DEF_HEIGHT: f32 = 0.4;
     pub const GROUND: f32 = -0.43;
 
-    pub struct State<'a> {
-        pub lr1: (&'a i32, &'a i32),
-        pub lr2: (&'a i32, &'a i32),
-        pub lr3: (&'a i32, &'a i32),
+    pub struct State {
+        pub l1: i32,
+        pub l2: i32,
+        pub l3: i32,
+        pub l4: i32,
     }
 
     pub trait Part {
@@ -465,6 +466,132 @@ pub mod robot {
                     *lr4.1 += 1;
                 } else {
                     *_base = (0, 0, 0, 0);
+                }
+                thread::sleep(SLEEP_DURATION);
+            }
+            _ => {}
+        }
+    }
+
+    pub fn execute(
+        lr1: (&mut i32, &mut i32),
+        lr2: (&mut i32, &mut i32),
+        lr3: (&mut i32, &mut i32),
+        lr4: (&mut i32, &mut i32),
+        _state: &mut (i32, i32, i32, i32),
+        r1: (f32, f32),
+        r2: (f32, f32),
+        r3: (f32, f32),
+        r4: (f32, f32),
+        r5: (f32, f32),
+        parts: &mut HashMap<&str, Box<dyn Part>>,
+        disp: &glium::Display<WindowSurface>,
+        state: &mut State,
+    ) {
+        match *_state {
+            (1, 0, 0, 0) => {
+                if *lr1.0 > state.l1 {
+                    rotate_all(3.0, parts, disp, r1.0, r1.1);
+
+                    *lr1.0 -= 1;
+                    *lr1.1 += 1;
+                } else if *lr1.0 < state.l1 {
+                    rotate_all(-3.0, parts, disp, r1.0, r1.1);
+
+                    *lr1.0 += 1;
+                    *lr1.1 -= 1;
+                } else {
+                    *_state = (0, 1, 0, 0);
+                }
+                thread::sleep(SLEEP_DURATION);
+            }
+            (0, 1, 0, 0) => {
+                if *lr2.0 > state.l2 {
+                    let chain1 = parts.remove("chain1").unwrap();
+                    rotate_all(3.0, parts, disp, r2.0, r2.1);
+                    parts.insert("chain1", chain1);
+
+                    *lr2.0 -= 1;
+                    *lr2.1 += 1;
+                } else if *lr2.0 < state.l2 {
+                    let chain1 = parts.remove("chain1").unwrap();
+                    rotate_all(-3.0, parts, disp, r2.0, r2.1);
+                    parts.insert("chain1", chain1);
+
+                    *lr2.0 += 1;
+                    *lr2.1 -= 1;
+                } else {
+                    *_state = (0, 0, 1, 0);
+                }
+                thread::sleep(SLEEP_DURATION);
+            }
+            (0, 0, 1, 0) => {
+                if *lr3.0 > state.l3 {
+                    let chain1 = parts.remove("chain1").unwrap();
+                    let chain2 = parts.remove("chain2").unwrap();
+                    rotate_all(3.0, parts, disp, r3.0, r3.1);
+                    parts.insert("chain1", chain1);
+                    parts.insert("chain2", chain2);
+
+                    *lr3.0 -= 1;
+                    *lr3.1 += 1;
+                } else if *lr3.0 < state.l3 {
+                    let chain1 = parts.remove("chain1").unwrap();
+                    let chain2 = parts.remove("chain2").unwrap();
+                    rotate_all(-3.0, parts, disp, r3.0, r3.1);
+                    parts.insert("chain1", chain1);
+                    parts.insert("chain2", chain2);
+
+                    *lr3.0 += 1;
+                    *lr3.1 -= 1;
+                } else {
+                    *_state = (0, 0, 0, 1);
+                }
+                thread::sleep(SLEEP_DURATION);
+            }
+            (0, 0, 0, 1) => {
+                if *lr4.0 > state.l4 {
+                    let claw1_vb = rotate(
+                        5.0,
+                        parts.get_mut("claw1").unwrap().as_mut(),
+                        disp,
+                        r4.0,
+                        r4.1,
+                    );
+                    let claw2_vb = rotate(
+                        -5.0,
+                        parts.get_mut("claw2").unwrap().as_mut(),
+                        disp,
+                        r5.0,
+                        r5.1,
+                    );
+                    parts.get_mut("claw1").unwrap().set_vertex_buf(claw1_vb);
+                    parts.get_mut("claw2").unwrap().set_vertex_buf(claw2_vb);
+
+                    *lr4.0 -= 1;
+                    *lr4.1 += 1;
+                } else if *lr4.0 < state.l4 {
+                    let claw1_vb = rotate(
+                        -5.0,
+                        parts.get_mut("claw1").unwrap().as_mut(),
+                        disp,
+                        r4.0,
+                        r4.1,
+                    );
+                    let claw2_vb = rotate(
+                        5.0,
+                        parts.get_mut("claw2").unwrap().as_mut(),
+                        disp,
+                        r5.0,
+                        r5.1,
+                    );
+                    parts.get_mut("claw1").unwrap().set_vertex_buf(claw1_vb);
+                    parts.get_mut("claw2").unwrap().set_vertex_buf(claw2_vb);
+
+                    *lr4.0 += 1;
+                    *lr4.1 -= 1;
+                } else {
+                    *_state = (0, 0, 0, 0);
                 }
                 thread::sleep(SLEEP_DURATION);
             }

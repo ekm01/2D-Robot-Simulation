@@ -106,7 +106,7 @@ fn main() {
                                     .insert(name + object_id.to_string().as_str(), random_object);
                                 object_id += 1;
                             }
-                            Some(winit::event::VirtualKeyCode::V) => {
+                            Some(winit::event::VirtualKeyCode::R) => {
                                 let name =
                                     String::from("obj") + (object_id - 1).to_string().as_str();
                                 if objects.get_mut(name.as_str()).is_some() {
@@ -433,9 +433,9 @@ fn main() {
             );
         }
 
-        // draw chains
-        draw_all(&mut frame, &mut objects);
-        draw_all(&mut frame, &mut parts);
+        // draw objects, then chains
+        draw_objects(&mut frame, &mut objects);
+        draw_chains(&mut frame, &mut parts);
 
         frame.finish().unwrap();
     });
@@ -453,7 +453,15 @@ fn draw(frame: &mut glium::Frame, chain: &mut dyn Part) {
         .unwrap();
 }
 
-fn draw_all(frame: &mut glium::Frame, parts: &mut HashMap<String, Box<dyn Part>>) {
+fn draw_chains(frame: &mut glium::Frame, chains: &mut HashMap<String, Box<dyn Part>>) {
+    draw(frame, chains.get_mut("chain1").unwrap().as_mut());
+    draw(frame, chains.get_mut("chain2").unwrap().as_mut());
+    draw(frame, chains.get_mut("chain3").unwrap().as_mut());
+    draw(frame, chains.get_mut("claw1").unwrap().as_mut());
+    draw(frame, chains.get_mut("claw2").unwrap().as_mut());
+}
+
+fn draw_objects(frame: &mut glium::Frame, parts: &mut HashMap<String, Box<dyn Part>>) {
     for (_, part) in parts.iter_mut() {
         frame
             .draw(

@@ -12,7 +12,7 @@ pub mod robot {
     implement_vertex!(Vertex, position);
 
     const DEF_RADIUS: f32 = 0.05;
-    const SLEEP_DURATION: Duration = Duration::from_millis(60);
+    const SLEEP_DURATION: Duration = Duration::from_millis(50);
     pub const DEF_THINNING: f32 = 0.02;
     pub const DEF_HEIGHT: f32 = 0.4;
     pub const GROUND: f32 = -0.43;

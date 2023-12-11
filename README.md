@@ -19,7 +19,7 @@ c = clockwise, cc = counter-clockwise
 * `Q` and `W` to perform cc- and c-rotation of the base joint
 * `A` and `S` to perform cc- and c-rotation of the middle joint
 * `Z` and `X` to perform cc- and c-rotation of the top joint
-* `1` and `2` to grip and release with the tool
+* `1` and `2` to grab and release with the tool
 * `B` to automatically return to start position
 * `T` to teach/save the current position
 * `L` to release manually while using the teach functionality

@@ -12,7 +12,7 @@ pub mod robot {
     implement_vertex!(Vertex, position);
 
     const DEF_RADIUS: f32 = 0.05;
-    const SLEEP_DURATION: Duration = Duration::from_millis(40);
+    const SLEEP_DURATION: Duration = Duration::from_millis(60);
     pub const DEF_THINNING: f32 = 0.02;
     pub const DEF_HEIGHT: f32 = 0.4;
     pub const GROUND: f32 = -0.43;
@@ -22,6 +22,7 @@ pub mod robot {
         pub l2: i32,
         pub l3: i32,
         pub l4: i32,
+        pub moved_object: String,
     }
 
     pub trait Part {
@@ -138,6 +139,38 @@ pub mod robot {
         b: &str,
         disp: &glium::Display<WindowSurface>,
     ) -> Object {
+        let indices = (0..=3).collect();
+        let (vertex_buffer, index_buffer) = generate_vertex_index_buffer(disp, &vertices, &indices);
+        let program = generate_program(r, g, b, disp);
+        Object {
+            vertices,
+            vertex_buffer,
+            index_buffer,
+            program,
+        }
+    }
+
+    pub fn generate_random_object(
+        bl: (f32, f32),
+        r: &str,
+        g: &str,
+        b: &str,
+        disp: &glium::Display<WindowSurface>,
+    ) -> Object {
+        let vertices = vec![
+            Vertex {
+                position: [bl.0, bl.1], //bl
+            },
+            Vertex {
+                position: [bl.0 + 0.05, bl.1], //br
+            },
+            Vertex {
+                position: [bl.0 + 0.05, bl.1 + 0.1], //tr
+            },
+            Vertex {
+                position: [bl.0, bl.1 + 0.1], //tl
+            },
+        ];
         let indices = (0..=3).collect();
         let (vertex_buffer, index_buffer) = generate_vertex_index_buffer(disp, &vertices, &indices);
         let program = generate_program(r, g, b, disp);
@@ -369,7 +402,7 @@ pub mod robot {
 
     pub fn rotate_all(
         angle: f32,
-        parts: &mut HashMap<&str, Box<dyn Part>>,
+        parts: &mut HashMap<String, Box<dyn Part>>,
         disp: &glium::Display<WindowSurface>,
         center_x: f32,
         center_y: f32,
@@ -391,10 +424,10 @@ pub mod robot {
         r3: (f32, f32),
         r4: (f32, f32),
         r5: (f32, f32),
-        parts: &mut HashMap<&str, Box<dyn Part>>,
+        parts: &mut HashMap<String, Box<dyn Part>>,
         disp: &glium::Display<WindowSurface>,
         state: &mut State,
-        obj: &mut Object,
+        obj: &mut dyn Part,
         _object: &mut i32,
     ) {
         match *_state {
@@ -402,7 +435,8 @@ pub mod robot {
                 if *lr1.0 > state.l1 {
                     rotate_all(3.0, parts, disp, r1.0, r1.1);
                     if *_object == 1 {
-                        obj.vertex_buffer = rotate(3.0, obj, disp, r1.0, r1.1);
+                        let obj_vertex_buf = rotate(3.0, obj, disp, r1.0, r1.1);
+                        obj.set_vertex_buf(obj_vertex_buf);
                     }
 
                     *lr1.0 -= 1;
@@ -410,7 +444,8 @@ pub mod robot {
                 } else if *lr1.0 < state.l1 {
                     rotate_all(-3.0, parts, disp, r1.0, r1.1);
                     if *_object == 1 {
-                        obj.vertex_buffer = rotate(-3.0, obj, disp, r1.0, r1.1);
+                        let obj_vertex_buf = rotate(-3.0, obj, disp, r1.0, r1.1);
+                        obj.set_vertex_buf(obj_vertex_buf);
                     }
 
                     *lr1.0 += 1;
@@ -424,10 +459,11 @@ pub mod robot {
                 if *lr2.0 > state.l2 {
                     let chain1 = parts.remove("chain1").unwrap();
                     rotate_all(3.0, parts, disp, r2.0, r2.1);
-                    parts.insert("chain1", chain1);
+                    parts.insert("chain1".to_string(), chain1);
 
                     if *_object == 1 {
-                        obj.vertex_buffer = rotate(3.0, obj, disp, r2.0, r2.1);
+                        let obj_vertex_buf = rotate(3.0, obj, disp, r2.0, r2.1);
+                        obj.set_vertex_buf(obj_vertex_buf);
                     }
 
                     *lr2.0 -= 1;
@@ -435,10 +471,11 @@ pub mod robot {
                 } else if *lr2.0 < state.l2 {
                     let chain1 = parts.remove("chain1").unwrap();
                     rotate_all(-3.0, parts, disp, r2.0, r2.1);
-                    parts.insert("chain1", chain1);
+                    parts.insert("chain1".to_string(), chain1);
 
                     if *_object == 1 {
-                        obj.vertex_buffer = rotate(-3.0, obj, disp, r2.0, r2.1);
+                        let obj_vertex_buf = rotate(-3.0, obj, disp, r2.0, r2.1);
+                        obj.set_vertex_buf(obj_vertex_buf);
                     }
 
                     *lr2.0 += 1;
@@ -453,11 +490,12 @@ pub mod robot {
                     let chain1 = parts.remove("chain1").unwrap();
                     let chain2 = parts.remove("chain2").unwrap();
                     rotate_all(3.0, parts, disp, r3.0, r3.1);
-                    parts.insert("chain1", chain1);
-                    parts.insert("chain2", chain2);
+                    parts.insert("chain1".to_string(), chain1);
+                    parts.insert("chain2".to_string(), chain2);
 
                     if *_object == 1 {
-                        obj.vertex_buffer = rotate(3.0, obj, disp, r3.0, r3.1);
+                        let obj_vertex_buf = rotate(3.0, obj, disp, r3.0, r3.1);
+                        obj.set_vertex_buf(obj_vertex_buf);
                     }
 
                     *lr3.0 -= 1;
@@ -466,11 +504,12 @@ pub mod robot {
                     let chain1 = parts.remove("chain1").unwrap();
                     let chain2 = parts.remove("chain2").unwrap();
                     rotate_all(-3.0, parts, disp, r3.0, r3.1);
-                    parts.insert("chain1", chain1);
-                    parts.insert("chain2", chain2);
+                    parts.insert("chain1".to_string(), chain1);
+                    parts.insert("chain2".to_string(), chain2);
 
                     if *_object == 1 {
-                        obj.vertex_buffer = rotate(-3.0, obj, disp, r3.0, r3.1);
+                        let obj_vertex_buf = rotate(-3.0, obj, disp, r3.0, r3.1);
+                        obj.set_vertex_buf(obj_vertex_buf);
                     }
 
                     *lr3.0 += 1;
@@ -502,7 +541,7 @@ pub mod robot {
                     if !detect_collision(
                         parts.get("claw1").unwrap().as_ref(),
                         parts.get("claw2").unwrap().as_ref(),
-                        &obj.vertices,
+                        &obj.get_vertices(),
                     ) {
                         *_object = 0;
                     }
@@ -527,11 +566,13 @@ pub mod robot {
                     parts.get_mut("claw1").unwrap().set_vertex_buf(claw1_vb);
                     parts.get_mut("claw2").unwrap().set_vertex_buf(claw2_vb);
 
-                    if detect_collision(
-                        parts.get("claw1").unwrap().as_ref(),
-                        parts.get("claw2").unwrap().as_ref(),
-                        &obj.vertices,
-                    ) {
+                    if *_object == 0
+                        && detect_collision(
+                            parts.get("claw1").unwrap().as_ref(),
+                            parts.get("claw2").unwrap().as_ref(),
+                            &obj.get_vertices(),
+                        )
+                    {
                         *_object = 1;
                     }
 
@@ -547,13 +588,25 @@ pub mod robot {
     }
 
     pub fn apply_gravity(
-        part: &mut dyn Part,
+        moved_object: &str,
+        state: Option<&mut State>,
+        objects: &mut HashMap<String, Box<dyn Part>>,
         disp: &glium::Display<WindowSurface>,
-    ) -> glium::VertexBuffer<Vertex> {
-        for vertex in &mut *part.get_vertices() {
-            vertex.position[1] -= 0.01;
+    ) {
+        let mut s = String::new();
+        if state.is_some() {
+            s.push_str(state.unwrap().moved_object.as_str());
         }
-        glium::VertexBuffer::new(disp, &part.get_vertices()).unwrap()
+
+        for (key, object) in objects.iter_mut() {
+            if object.get_vertices()[0].position[1] > GROUND && moved_object != *key && s != *key {
+                for vertex in object.get_vertices() {
+                    vertex.position[1] -= 0.01;
+                }
+                let buf = glium::VertexBuffer::new(disp, object.get_vertices()).unwrap();
+                object.set_vertex_buf(buf);
+            }
+        }
     }
 
     fn check_boundaries(ray_start: Vertex, first: Vertex, second: Vertex) -> bool {
@@ -577,7 +630,7 @@ pub mod robot {
         x + scaling_factor + 0.07
     }
 
-    pub fn detect_collision(claw1: &dyn Part, claw2: &dyn Part, vertices: &Vec<Vertex>) -> bool {
+    fn detect_collision(claw1: &dyn Part, claw2: &dyn Part, vertices: &Vec<Vertex>) -> bool {
         let mut res = false;
         let length = vertices.len();
 
@@ -611,9 +664,26 @@ pub mod robot {
         res
     }
 
+    pub fn detect_collisions(
+        claw1: &dyn Part,
+        claw2: &dyn Part,
+        objects: &HashMap<String, Box<dyn Part>>,
+    ) -> Option<String> {
+        for (key, object) in objects.iter() {
+            if detect_collision(claw1, claw2, object.get_vertices_ref()) {
+                return Some(String::from(key));
+            }
+        }
+        None
+    }
+
     pub fn create(
         display: &glium::Display<WindowSurface>,
-    ) -> (HashMap<&str, Box<dyn Part>>, Object) {
+    ) -> (
+        HashMap<String, Box<dyn Part>>,
+        HashMap<String, Box<dyn Part>>,
+        Object,
+    ) {
         let mut chain1: Box<dyn Part> =
             Box::new(generate_chain(-0.5, -0.4, "1.0", "0.6", "0.0", display));
         let mut chain2: Box<dyn Part> = Box::new(generate_chain(
@@ -657,16 +727,22 @@ pub mod robot {
 
         let vertices = vec![vertex1, vertex2, vertex3, vertex4];
 
-        let obj = generate_object(vertices, "0.0", "0.0", "0.0", display);
+        let obj: Box<dyn Part> = Box::new(generate_object(vertices, "0.0", "0.0", "0.0", display));
 
         let (claw1, claw2) =
             generate_claws(*chain3.get_tip().unwrap(), "1.0", "0.0", "0.0", display);
-        let mut parts: HashMap<&str, Box<dyn Part>> = HashMap::new();
-        parts.insert("chain1", chain1);
-        parts.insert("chain2", chain2);
-        parts.insert("chain3", chain3);
-        parts.insert("claw1", claw1);
-        parts.insert("claw2", claw2);
-        (parts, obj)
+        let mut parts: HashMap<String, Box<dyn Part>> = HashMap::new();
+        parts.insert("chain1".to_string(), chain1);
+        parts.insert("chain2".to_string(), chain2);
+        parts.insert("chain3".to_string(), chain3);
+        parts.insert("claw1".to_string(), claw1);
+        parts.insert("claw2".to_string(), claw2);
+
+        let mut objects: HashMap<String, Box<dyn Part>> = HashMap::new();
+        objects.insert("obj".to_string(), obj);
+
+        let dummy = generate_object(Vec::new(), "1.0", "1.0", "1.0", display);
+
+        (parts, objects, dummy)
     }
 }

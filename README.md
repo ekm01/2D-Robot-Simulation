@@ -31,7 +31,7 @@ Simulation starts with one single object that you cannot remove. Other operation
 * `C` to randomly spawn new objects with different colors
 * `R` to remove the last added object
 
-# Example Sim
+# Example Simulation
 1. Spawn at least 3 new objects.
 2. Move to the center of each object one by one, grab them using `2`. Teach each movement.
 3. Stay in the current position and release the object with `L`. This way, you are not able to grab and move the object while teaching.

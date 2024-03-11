@@ -1,3 +1,5 @@
+![](example.png)
+
 # Quick Start
 A simple 2D industrial robot like simulation.\
 \

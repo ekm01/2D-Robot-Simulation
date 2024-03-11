@@ -1,5 +1,5 @@
 # Quick Start
-A very simple 2D industrial robot like simulation.\
+A simple 2D industrial robot like simulation.\
 \
 Used crates:
 ```

@@ -15,7 +15,7 @@ Build and run the project:
 cargo run
 ```
 # Controls
-The robot arm has 3 degrees of freedom with a 2 claws as a tool.\
+The robot arm has 3 degrees of freedom with a claw tool.\
 \
 c = clockwise, cc = counter-clockwise
 * `Q` and `W` to perform cc- and c-rotation of the base joint
